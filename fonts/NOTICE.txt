@@ -1,0 +1,13 @@
+Acapella Air
+Copyright (c) 2026 Tiago Pereira. All rights reserved.
+
+This original display typeface was created for Tiago Pereira's Acapella project.
+The project sources contain the original glyph drawings, vector construction
+code, kerning and font metadata. No third-party typeface outlines are included.
+
+This notice does not grant third parties a redistribution or modification
+license. Any licensing outside the owner's project is for the owner to decide.
+The technical font embedding setting fsType=0 is not a separate public license.
+
+Tooling used to generate the files includes CoreGraphics, fontTools and Brotli.
+Their implementation code is not bundled into the generated font outlines.

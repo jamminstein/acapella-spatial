@@ -1,18 +1,131 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Acapella Spatial — Privacy Policy</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f2eb">
+  <meta name="description" content="Sing into the air. Acapella is a spatial vocal looper for Apple Vision Pro. Start with a hum. Add another. See where it goes.">
+  <meta property="og:title" content="Acapella — Sing into the air.">
+  <meta property="og:description" content="Start with a hum. Add another. See where it goes. Coming to Apple Vision Pro.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://jamminstein.github.io/acapella-spatial/">
+  <meta property="og:image" content="https://jamminstein.github.io/acapella-spatial/media/images/small-studio-play-1600.jpg">
+  <title>Acapella — Sing into the air.</title>
+  <link rel="canonical" href="https://jamminstein.github.io/acapella-spatial/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/AcapellaAir.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="landing.css">
+  <script src="landing.js" defer></script>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <h1>Acapella Spatial</h1>
-  <p class="tag">Privacy Policy</p>
-</header>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header shell">
+    <a class="wordmark" href="#" aria-label="Acapella home"><img src="media/images/acapella-air-coral-800.png" width="800" height="215" alt="Acapella"></a>
+    <nav aria-label="Main navigation"><a href="#experience">App</a><a href="#films">Film</a><a href="support.html">Support</a></nav>
+  </header>
+  <main id="main">
+    <section class="hero shell" aria-labelledby="hero-title">
+      <div class="hero-heading">
+        <div><p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Coming to Apple Vision Pro</p><h1 id="hero-title">Sing into <br>the air<span class="orange">.</span></h1></div>
+        <div class="hero-intro"><p class="lead">Start with a hum.</p><p>Add another. See where it goes.</p><div class="actions"><a class="button" href="#films">Watch the film <span aria-hidden="true">↘</span></a><a class="text-link" href="#experience">How it works <span aria-hidden="true">↗</span></a></div></div>
+      </div>
+      <figure>
+        <a class="image-link" href="media/originals/small-studio-play.jpg" aria-label="View the full-resolution home studio image">
+          <img src="media/images/small-studio-play-1600.jpg" srcset="media/images/small-studio-play-800.jpg 800w, media/images/small-studio-play-1600.jpg 1600w, media/images/small-studio-play-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" fetchpriority="high" alt="Acapella's Play panel and five colored vocal loops, shown against a staged home recording studio background.">
+          <span class="image-action" aria-hidden="true">View full image ↗</span>
+        </a>
+        <figcaption>Acapella in Play. A few sounds, a few things to try.</figcaption>
+      </figure>
+    </section>
 
+    <section class="featured-film shell section-space" id="films" aria-labelledby="films-title">
+      <div class="film-heading"><h2 id="films-title">Watch it come together.</h2><span>Concept film · 36 seconds</span></div>
+      <figure class="film">
+        <video id="third-person-film" controls muted playsinline preload="none" poster="media/videos/third-person-poster.jpg" aria-label="Third-person spatial voice concept film" aria-describedby="third-film-caption">
+          <source src="media/videos/third-person-concept.mp4" type="video/mp4">
+          <track kind="captions" src="media/videos/soundtrack-captions.vtt" srclang="en" label="English sound descriptions">
+          Your browser does not support embedded video. <a href="media/videos/third-person-concept.mp4">Open the third-person concept film</a>.
+        </video>
+        <figcaption class="film-under"><span id="third-film-caption">One phrase at a time, sixteen layers take their place.</span><button class="sound-toggle" type="button" aria-controls="third-person-film" aria-pressed="false"><span aria-hidden="true">♪</span> <span data-sound-label>Sound on</span></button></figcaption>
+      </figure>
+    </section>
+
+    <section class="start-section shell section-space" id="experience" aria-labelledby="start-title">
+      <h2 id="start-title">Try a little phrase.</h2>
+      <ol class="steps">
+        <li><span class="step-number peach" aria-hidden="true">01</span><h3>Sing.</h3><p>Tap “record a phrase”, then sing.</p></li>
+        <li><span class="step-number mint" aria-hidden="true">02</span><h3>Loop.</h3><p>Tap “finish recording” to hear it repeat.</p></li>
+        <li><span class="step-number lavender" aria-hidden="true">03</span><h3>Move.</h3><p>Drag a ribbon. The sound follows.</p></li>
+      </ol>
+      <figure>
+        <a class="image-link" href="media/originals/bedroom-simple.jpg" aria-label="View the full-resolution Simple view screenshot">
+          <img src="media/images/bedroom-simple-1600.jpg" srcset="media/images/bedroom-simple-800.jpg 800w, media/images/bedroom-simple-1600.jpg 1600w, media/images/bedroom-simple-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" loading="lazy" alt="Acapella's Simple view with an orange recording button, Stop Sound, and two vocal loops, staged in a bedroom.">
+          <span class="image-action" aria-hidden="true">View full image ↗</span>
+        </a>
+        <figcaption>Simple. Just enough to get started.</figcaption>
+      </figure>
+    </section>
+
+    <section class="studio-section section-space" aria-labelledby="studio-title">
+      <div class="shell">
+        <div class="studio-heading"><h2 id="studio-title">More, if <br>you want it.</h2><div class="studio-intro"><p>Explore sounds for a playful change. Open the studio to adjust a loop’s pitch, stretch, or volume.</p><p>Save a scene for later. Return to Simple after a take; your loops and settings stay with you.</p></div></div>
+        <figure>
+          <a class="image-link" href="media/originals/grand-studio-editor.jpg" aria-label="View the full-resolution studio and loop editor screenshot">
+            <img src="media/images/grand-studio-editor-1600.jpg" srcset="media/images/grand-studio-editor-800.jpg 800w, media/images/grand-studio-editor-1600.jpg 1600w, media/images/grand-studio-editor-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" loading="lazy" alt="Acapella's full studio beside a loop editor with pitch, stretch, volume, reverb, and envelope controls, staged in a large recording studio.">
+            <span class="image-action" aria-hidden="true">View full image ↗</span>
+          </a>
+          <figcaption>Studio. A closer look at each loop.</figcaption>
+        </figure>
+        <p class="quiet-note">Live performance tools are off until you choose them, and switch off when you return to a simpler view.</p>
+      </div>
+    </section>
+
+    <section class="layers-section section-space" aria-labelledby="layers-title">
+      <div class="shell">
+        <div class="layers-heading"><h2 id="layers-title">Keep adding. <br>Keep listening.</h2><p>Low to the left. High to the right. Find a place for each part.</p></div>
+        <figure>
+          <a class="image-link" href="media/originals/warehouse-layers.jpg" aria-label="View the full-resolution layered warehouse scene">
+            <img src="media/images/warehouse-layers-1600.jpg" srcset="media/images/warehouse-layers-800.jpg 800w, media/images/warehouse-layers-1600.jpg 1600w, media/images/warehouse-layers-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" loading="lazy" alt="Eighteen colorful Acapella waveform ribbons at different heights and positions around the Play panel, staged in a daylight warehouse.">
+            <span class="image-action" aria-hidden="true">View full image ↗</span>
+          </a>
+          <figcaption>A fuller arrangement in Play.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="inside-section shell section-space" aria-label="Another perspective">
+      <details class="inside-view">
+        <summary><span>See it from inside</span><span class="inside-meta">Wearer’s view · 36 seconds <b aria-hidden="true">+</b></span></summary>
+        <figure class="film">
+          <video id="first-person-film" controls muted playsinline preload="none" poster="media/videos/first-person-poster.jpg" aria-label="First-person spatial voice concept film" aria-describedby="first-film-caption">
+            <source src="media/videos/first-person-concept.mp4" type="video/mp4">
+            <track kind="captions" src="media/videos/soundtrack-captions.vtt" srclang="en" label="English sound descriptions">
+            Your browser does not support embedded video. <a href="media/videos/first-person-concept.mp4">Open the first-person concept film</a>.
+          </video>
+          <figcaption class="film-under"><span id="first-film-caption">The same concept arrangement, from the wearer’s perspective.</span><button class="sound-toggle" type="button" aria-controls="first-person-film" aria-pressed="false"><span aria-hidden="true">♪</span> <span data-sound-label>Sound on</span></button></figcaption>
+        </figure>
+      </details>
+    </section>
+
+    <section class="concept-section shell section-space" aria-label="The idea illustrated">
+      <figure>
+        <a class="image-link" href="media/originals/spatial-voice-concept.png" aria-label="View the full concept illustration">
+          <img src="media/images/spatial-voice-concept-1672.jpg" srcset="media/images/spatial-voice-concept-800.jpg 800w, media/images/spatial-voice-concept-1672.jpg 1672w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="1672" height="941" loading="lazy" alt="Concept illustration of an adult singing while wearing Apple Vision Pro, surrounded by peach, mint, lavender, and yellow vocal layers. Text reads: Sing into the air. Make a symphony of your own voice.">
+          <span class="image-action" aria-hidden="true">View full image ↗</span>
+        </a>
+        <figcaption>The idea, illustrated.</figcaption>
+      </figure>
+      <p class="media-note">The room images show native Acapella UI captured in the visionOS Simulator with AI-generated backdrops; these rooms aren’t included in the app. The illustration and films are concept artwork, not app recordings. The films contain layered vocals.</p>
+    </section>
+
+    <section class="closing-section shell section-space" aria-label="Privacy and contact">
+      <div class="local-copy"><h2>Yours to keep.</h2><p>Your recordings stay on your Vision Pro. No account, uploads, or tracking.</p><a class="text-link" href="#privacy">Privacy policy <span aria-hidden="true">↗</span></a></div>
+      <div class="support-copy"><h2>Say hello.</h2><p>Questions or ideas? I’d love to hear from you.</p><a class="email-link" href="mailto:tiagopereira@me.com">tiagopereira@me.com <span aria-hidden="true">↗</span></a><a class="text-link" href="support.html">Getting started &amp; support <span aria-hidden="true">↗</span></a></div>
+    </section>
+
+    <section class="privacy-section shell" id="privacy" aria-labelledby="privacy-title">
+      <div class="privacy-top"><h2 id="privacy-title">Privacy policy</h2><a class="text-link" href="privacy.html">Open as a separate page <span aria-hidden="true">↗</span></a></div>
+      <details class="privacy-details"><summary>Read the complete privacy policy <span aria-hidden="true">+</span></summary><div class="privacy-copy">
 <p class="updated">Last updated: 31 October 2026</p>
 
 <p>Acapella Spatial is a spatial vocal looper for Apple Vision Pro. It is designed
@@ -74,11 +187,9 @@ harm arising from listening volume or from the audio the app produces.</p>
 your email and anything you choose to attach are used to respond to your request.
 This is separate from the app, which does not upload recordings or tracking data.</p>
 
-<nav>
-  <a href="index.html">Privacy</a>
-  <a href="support.html">Support</a>
-</nav>
-<footer>Acapella Spatial for Apple Vision Pro.</footer>
-</div>
+      </div></details>
+    </section>
+  </main>
+  <footer class="site-footer shell"><a class="wordmark" href="#" aria-label="Back to the top"><img src="media/images/acapella-air-coral-800.png" width="800" height="215" alt="Acapella"></a><p>Not yet available to download.</p><nav aria-label="Footer navigation"><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="#">Back to top ↑</a></nav></footer>
 </body>
 </html>

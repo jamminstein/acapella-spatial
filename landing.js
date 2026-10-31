@@ -15,10 +15,10 @@ const automaticPlaybackEnabled = document.body.dataset.autoplay !== 'off';
 const filmRoot = document.body.dataset.filmRoot || 'media/videos/soundtracks-v2';
 const fullTrackRoot = document.body.dataset.fullTrackRoot || 'media/audio/soundtracks-v2';
 const soundtracks = [
-  { id: 'mouth-made-symphony', title: 'Mouth-Made Symphony' },
-  { id: 'breath-and-clicks-2', title: 'Breath and Clicks 2' },
-  { id: 'breath-and-clicks', title: 'Breath and Clicks' },
-  { id: 'clicks-in-cheek', title: 'Clicks in Cheek' }
+  { id: 'mouth-made-symphony', title: 'Mouth Party' },
+  { id: 'breath-and-clicks-2', title: 'Puff Parade' },
+  { id: 'breath-and-clicks', title: 'Breath Club' },
+  { id: 'clicks-in-cheek', title: 'Cheeky Beats' }
 ];
 let selectedSoundtrack = soundtracks[0].id;
 const filmStates = Array.from(document.querySelectorAll('video')).map(video => ({
@@ -217,6 +217,8 @@ function updateSoundtrackControls() {
   document.querySelectorAll('[data-full-track]').forEach(link => {
     link.href = `${fullTrackRoot}/${selectedSoundtrack}.m4a`;
     link.setAttribute('aria-label', `Listen to the full ${track.title} track`);
+    const label = link.querySelector('[data-full-track-label]');
+    if (label) label.textContent = `Full track: ${track.title}`;
   });
 }
 

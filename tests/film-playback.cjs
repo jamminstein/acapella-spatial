@@ -253,7 +253,7 @@ test('privacy hash, privacy link and hashchange continue to reveal policy', asyn
   assert.equal((f.window.listeners.click || []).length, 0);
 });
 
-test('both film palettes default to Mouth-Made Symphony', async () => {
+test('both film palettes default to Mouth Party', async () => {
   const f = fixture();
   assert.equal(f.trackButtons.filter(b => b.attrs['aria-pressed'] === 'true').length, 2);
   assert(f.videos.every(v => v.source.src.endsWith('-mouth-made-symphony.mp4')));
@@ -349,7 +349,8 @@ test('offscreen transition cancels pending track-selection playback', async () =
 test('full-track links follow selection and pause films until explicit playback', async () => {
   const f = fixture(); f.choose(0, 'breath-and-clicks-2'); await f.flush();
   assert(f.fullLinks.every(link => link.href.endsWith('/breath-and-clicks-2.m4a')));
-  assert(f.fullLinks.every(link => link.attrs['aria-label'].includes('Breath and Clicks 2')));
+  assert(f.fullLinks.every(link => link.attrs['aria-label'].includes('Puff Parade')));
+  assert(f.fullLinks.every(link => link.label.textContent === 'Full track: Puff Parade'));
   f.fullLinks[0].emit('click'); await f.flush(); f.enter(0); f.enter(1); await f.flush();
   assert(f.videos.every(v => v.paused)); f.choose(1, 'mouth-made-symphony'); await f.flush(); assert.equal(f.videos[1].paused, false);
 });

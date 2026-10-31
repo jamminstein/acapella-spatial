@@ -26,11 +26,11 @@ Only public-facing approved artwork, screenshots, and final marketing films belo
 | `small-studio-play` | Native Play controls and five loops, captured in visionOS Simulator with a generated small-studio backdrop. |
 | `grand-studio-editor` | Native full studio and selected loop editor, captured in visionOS Simulator with a generated studio backdrop. |
 | `warehouse-layers` | Native Play interface and eighteen loops, captured in visionOS Simulator with a generated warehouse backdrop. |
-| `spatial-voice-concept` | Approved AI-generated adult-wearer concept illustration. It is not an app screenshot. |
+| `spatial-voice-concept` | Approved AI-generated adult-wearer concept illustration, with the baked typography removed through a minimal image-generation edit. It is not an app screenshot. |
 
-`media/images/` contains resized, progressively encoded JPEGs for responsive delivery (quality 85). `media/originals/` keeps the original four 3840 × 2160 screenshot JPEGs and the original 1672 × 941 illustration PNG available through each image link. Images are neither cropped nor color-adjusted.
+`media/images/` contains resized, progressively encoded JPEGs for responsive delivery (quality 85). `media/originals/` keeps the original four 3840 × 2160 screenshot JPEGs and the original 1672 × 941 illustration PNG available through each image link. Responsive exports are neither cropped nor color-adjusted. The text-free illustration is a new edited original; the earlier version remains in the private marketing workspace.
 
-The generated room backdrops are marketing staging, not environments included in Acapella. The concept artwork and films explain the idea and are labeled separately from the native app captures.
+The generated room backdrops are marketing staging, not environments included in Acapella. The concept films remain labeled. The separate illustration section intentionally contains only the text-free artwork, without a caption or explanatory copy, as requested.
 
 ### Film integration
 
@@ -41,7 +41,11 @@ The landing page includes these 36-second, sixteen-layer sequential concept film
 - `media/videos/first-person-poster.jpg`
 - `media/videos/third-person-poster.jpg`
 
-Both final H.264/AAC films are 1920 × 1080 at 24 fps, with 864 frames and clean full-file decode checks. The third-person film uses the approved adult illustration as its character texture. Sixteen waveforms appear individually; the soundtrack uses the developer’s owned backing-vocal recording, with repeated layers of that same performance. These are concept films, not App Store app previews or app recordings. Native video controls remain available. Films start muted when they enter the viewport, pause when they leave, and only one can play at a time. Sound requires an explicit user action. Reduced-motion preferences disable automatic playback; manual pauses remain respected while the film stays in view. Metadata loads when a film comes into view. `soundtrack-captions.vtt` supplies an English sound description for the layered vocal soundtrack.
+Both final H.264/AAC films are 1920 × 1080 at 24 fps, with 864 frames and clean full-file decode checks. The third-person film uses the approved adult illustration as its character texture. Sixteen waveforms appear individually; the soundtrack uses the developer’s owned backing-vocal recording, with repeated layers of that same performance. These are concept films, not App Store app previews or app recordings. Native video controls remain available. Films attempt audible playback when they enter the viewport and fall back to muted playback if the browser blocks sound. Explicit sound preferences carry between films for the current visit. Films pause when they leave, and only one can play at a time. The wearer’s view is expanded by default. Reduced-motion preferences disable automatic playback; manual pauses remain respected while the film stays in view. Metadata loads when a film comes into view. `soundtrack-captions.vtt` supplies an English sound description for the layered vocal soundtrack.
+
+## Link previews
+
+Open Graph and large-image social-card metadata use the text-free main illustration (1672 × 941 JPEG), an absolute HTTPS image URL, descriptive image alt text and concise conversational title/description. Metadata is present in the initial static HTML, so social crawlers do not need JavaScript.
 
 ## Publication state
 

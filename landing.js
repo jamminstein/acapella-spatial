@@ -18,111 +18,189 @@ const filmStates = Array.from(document.querySelectorAll('video')).map(video => (
   ratio: 0,
   userPaused: false,
   autoBlocked: false,
-  autoStarting: false,
-  ignorePause: false,
+  starting: false,
+  ignoredPauses: 0,
   playKind: null,
-  request: 0
+  request: 0,
+  soundSnapshot: { muted: video.muted, volume: video.volume }
 }));
 let activeFilm = null;
+// Visit-local preference. A browser's muted fallback never changes this choice.
+let soundWanted = true;
+let soundVolume = 1;
+let lastAudibleVolume = 1;
 
 function syncSound(state) {
   if (!state.button) return;
   const audible = !state.video.muted && state.video.volume > 0;
   state.button.setAttribute('aria-pressed', String(audible));
-  state.button.querySelector('[data-sound-label]').textContent = audible ? 'Sound off' : 'Sound on';
+  const label = state.button.querySelector('[data-sound-label]');
+  if (label) label.textContent = audible ? 'Sound off' : 'Sound on';
 }
 
-function pauseFilm(state, mute = false) {
-  state.request += 1;
-  if (!state.video.paused) {
-    state.ignorePause = true;
-    state.video.pause();
-  } else if (state.autoStarting) {
-    state.video.pause();
-  }
-  state.autoStarting = false;
-  state.playKind = null;
-  if (mute) state.video.muted = true;
-  if (activeFilm === state) activeFilm = null;
+function setFilmSound(state, muted, volume = soundVolume) {
+  state.video.muted = muted;
+  state.video.volume = volume;
+  // volumechange is queued, so track values rather than counting events. This
+  // also distinguishes native controls from our own preference/fallback writes.
+  state.soundSnapshot = { muted: state.video.muted, volume: state.video.volume };
   syncSound(state);
+}
+
+function shareSoundPreference(enabled, volume = soundVolume) {
+  soundWanted = enabled;
+  soundVolume = volume;
+  if (volume > 0) lastAudibleVolume = volume;
+  filmStates.forEach(state => setFilmSound(state, !enabled, volume));
+}
+
+function rememberNativeSound(state) {
+  const { video, soundSnapshot } = state;
+  if (video.muted !== soundSnapshot.muted || video.volume !== soundSnapshot.volume) {
+    shareSoundPreference(!video.muted && video.volume > 0, video.volume);
+  }
+}
+
+function pauseFilm(state) {
+  state.request += 1;
+  state.starting = false;
+  state.playKind = null;
+  if (!state.video.paused) state.ignoredPauses += 1;
+  // Also cancel a pending play() request, even if playback has not begun.
+  state.video.pause();
+  if (activeFilm === state) activeFilm = null;
+}
+
+function canContinue(state, kind) {
+  const details = state.video.closest('.inside-view');
+  return !document.hidden && (!details || details.open) &&
+    (kind === 'manual' || (state.visible && !state.userPaused && !reducedMotion.matches));
+}
+
+function startFilm(state, kind) {
+  if (!canContinue(state, kind)) return;
+  if (kind === 'auto') filmStates.forEach(rememberNativeSound);
+  filmStates.forEach(other => { if (other !== state) pauseFilm(other); });
+  if (kind === 'manual') state.userPaused = false;
+  state.autoBlocked = false;
+  state.starting = true;
+  state.playKind = kind;
+  activeFilm = state;
+  const request = ++state.request;
+  setFilmSound(state, !soundWanted);
+
+  const isCurrent = () => state.request === request && activeFilm === state;
+  function failed(error, allowFallback) {
+    if (!isCurrent()) return;
+    if (!canContinue(state, kind)) {
+      pauseFilm(state);
+      return;
+    }
+    // Only autoplay-policy rejection warrants another play attempt. Network,
+    // decoding and interrupted-request failures must not create a retry loop.
+    if (allowFallback && error && error.name === 'NotAllowedError') {
+      rememberNativeSound(state);
+      setFilmSound(state, true);
+      attempt(false);
+      return;
+    }
+    pauseFilm(state);
+    state.autoBlocked = true;
+  }
+  function attempt(allowFallback) {
+    if (!isCurrent() || !canContinue(state, kind)) return;
+    try {
+      // Keep this call synchronous with Sound on / Watch clicks so browsers
+      // can grant their normal user-activation permission for audible playback.
+      const started = state.video.play();
+      Promise.resolve(started).then(() => {
+        if (!isCurrent()) return;
+        state.starting = false;
+        if (!canContinue(state, kind)) pauseFilm(state);
+      }, error => failed(error, allowFallback));
+    } catch (error) {
+      failed(error, allowFallback);
+    }
+  }
+  attempt(!state.video.muted && state.video.volume > 0);
 }
 
 function playVisibleFilm() {
   if (reducedMotion.matches || document.hidden) return;
-  // Keep a visible manual playback, and avoid switching between two similarly
-  // visible films as an intersection threshold fluctuates.
-  if (activeFilm && !activeFilm.video.paused && activeFilm.visible &&
-      (activeFilm.playKind === 'manual' || activeFilm.ratio >= 0.35)) return;
-
+  // An explicit Watch click may start while its anchor is scrolling into view.
+  // Intersection/visibility events still cancel it when the film leaves view.
+  if (activeFilm && (activeFilm.starting || !activeFilm.video.paused) &&
+      (activeFilm.playKind === 'manual' ||
+       (activeFilm.visible && activeFilm.ratio >= 0.35))) return;
   const candidate = filmStates
     .filter(state => state.visible && state.ratio >= 0.35 && !state.userPaused &&
       !state.autoBlocked && !state.video.ended)
     .sort((a, b) => b.ratio - a.ratio)[0];
-  if (!candidate || candidate.autoStarting || !candidate.video.paused) return;
-  filmStates.forEach(state => { if (state !== candidate) pauseFilm(state, true); });
-
-  candidate.video.muted = true;
-  candidate.autoStarting = true;
-  candidate.playKind = 'auto';
-  activeFilm = candidate;
-  const request = ++candidate.request;
-  syncSound(candidate);
-  try {
-    const started = candidate.video.play();
-    if (started && typeof started.then === 'function') {
-      started.then(() => {
-        if (candidate.request !== request) return;
-        if (!candidate.visible || reducedMotion.matches || document.hidden) pauseFilm(candidate, true);
-      }).catch(() => {
-        if (candidate.request !== request) return;
-        candidate.autoStarting = false;
-        candidate.autoBlocked = true;
-        if (activeFilm === candidate) activeFilm = null;
-      });
-    }
-  } catch (_) {
-    candidate.autoStarting = false;
-    candidate.autoBlocked = true;
-    if (activeFilm === candidate) activeFilm = null;
-  }
+  if (!candidate || candidate.starting || !candidate.video.paused) return;
+  startFilm(candidate, 'auto');
 }
 
 filmStates.forEach(state => {
   const video = state.video;
-  video.muted = true;
-  syncSound(state);
-  video.addEventListener('volumechange', () => syncSound(state));
+  setFilmSound(state, !soundWanted);
+  video.addEventListener('volumechange', () => {
+    rememberNativeSound(state);
+    syncSound(state);
+  });
   video.addEventListener('play', () => {
     if (video.paused) return;
-    state.playKind = state.autoStarting ? 'auto' : 'manual';
-    state.autoStarting = false;
+    const kind = state.playKind || 'manual';
+    if (!canContinue(state, kind)) {
+      pauseFilm(state);
+      return;
+    }
+    if (!state.playKind) state.request += 1;
+    state.playKind = kind;
     state.userPaused = false;
     state.autoBlocked = false;
-    filmStates.forEach(other => { if (other !== state) pauseFilm(other, true); });
+    filmStates.forEach(other => { if (other !== state) pauseFilm(other); });
     activeFilm = state;
   });
   video.addEventListener('pause', () => {
-    if (state.ignorePause) {
-      state.ignorePause = false;
+    if (state.ignoredPauses > 0) {
+      state.ignoredPauses -= 1;
       return;
     }
-    // A user pause remains in force until the film fully leaves the viewport.
-    if (state.visible && !video.ended) state.userPaused = true;
-    state.autoStarting = false;
+    if (!video.paused) return;
+    state.request += 1;
+    // A manual pause survives scrolling away and back. Explicit play is the
+    // only action that clears it; our own offscreen pauses are ignored above.
+    if (!video.ended) state.userPaused = true;
+    state.starting = false;
     state.playKind = null;
     if (activeFilm === state) activeFilm = null;
   });
   video.addEventListener('ended', () => {
+    state.request += 1;
+    state.starting = false;
+    state.playKind = null;
     if (activeFilm === state) activeFilm = null;
   });
   if (state.button) {
     state.button.addEventListener('click', () => {
       const enable = video.muted || video.volume === 0;
-      if (enable && video.volume === 0) video.volume = 0.5;
-      video.muted = !enable;
-      syncSound(state);
+      shareSoundPreference(enable, enable && video.volume === 0 ? lastAudibleVolume : video.volume);
+      // Muting an intentionally paused film does not resume it.
+      if (enable) startFilm(state, 'manual');
     });
   }
+});
+
+// This dedicated film action can request sound; unrelated page clicks cannot.
+document.querySelectorAll('.actions a[href="#films"]').forEach(link => {
+  link.addEventListener('click', event => {
+    if (event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey ||
+        event.shiftKey || event.altKey) return;
+    const state = filmStates.find(item => item.video.id === 'third-person-film');
+    if (!state) return;
+    shareSoundPreference(true, soundVolume || lastAudibleVolume);
+    startFilm(state, 'manual');
+  });
 });
 
 if ('IntersectionObserver' in window) {
@@ -133,8 +211,7 @@ if ('IntersectionObserver' in window) {
       state.visible = entry.isIntersecting && entry.intersectionRatio > 0;
       state.ratio = entry.intersectionRatio;
       if (!state.visible) {
-        pauseFilm(state, true);
-        state.userPaused = false;
+        pauseFilm(state);
         state.autoBlocked = false;
       } else if (state.video.preload === 'none') {
         state.video.preload = 'metadata';
@@ -148,24 +225,23 @@ if ('IntersectionObserver' in window) {
 reducedMotion.addEventListener('change', () => {
   if (reducedMotion.matches) {
     filmStates.forEach(state => {
-      if (state.playKind === 'auto' || state.autoStarting) pauseFilm(state, true);
+      if (state.playKind === 'auto') pauseFilm(state);
     });
   } else {
     playVisibleFilm();
   }
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) filmStates.forEach(state => pauseFilm(state, true));
+  if (document.hidden) filmStates.forEach(state => pauseFilm(state));
   else playVisibleFilm();
 });
 document.querySelectorAll('.inside-view').forEach(details => {
   details.addEventListener('toggle', () => {
     if (details.open) return;
     filmStates.filter(state => details.contains(state.video)).forEach(state => {
-      pauseFilm(state, true);
+      pauseFilm(state);
       state.visible = false;
       state.ratio = 0;
-      state.userPaused = false;
     });
   });
 });

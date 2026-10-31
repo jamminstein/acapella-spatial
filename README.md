@@ -34,17 +34,17 @@ The generated room backdrops are marketing staging, not environments included in
 
 ### Film integration
 
-Use “Video” in visitor-facing navigation and calls to action. Same-page anchor links use plain labels without arrows.
+Keep the short landing page free of hero navigation buttons and song pickers. Same-page anchor links use plain labels without arrows.
 
-The two 36-second concept films share four soundtrack choices: **Mouth Party** (default), **Puff Parade**, **Breath Club**, and **Cheeky Beats**. The owner supplied all four recordings. Each pastel button starts that perspective with the chosen music; the other perspective adopts the same selection. Native video controls remain available. The full-track link opens the complete selected recording and pauses the films.
+The two 36-second concept films draw from four owner-supplied recordings: **Mouth Party**, **Puff Parade**, **Breath Club**, and **Cheeky Beats**. On each page load, the songs are shuffled and each perspective receives a different one. Its song stays fixed across scrolling, pauses, and replays. There is no playlist, song picker, or full-track link; native video controls and the sound toggle remain available. Without JavaScript, both videos retain the default Mouth Party soundtrack.
 
 `media/videos/soundtracks-v2/` contains eight H.264/AAC variants, named `{third,first}-{track-id}.mp4`, plus one VTT sound-description track per song. `media/audio/soundtracks-v2/` contains the four complete recordings converted from Opus to AAC for browser compatibility. Each film uses 0:00–0:36 of its selected track with a 0.75-second ending fade. No volume adjustment was needed. Every variant preserves the original 1920 × 1080, 24 fps video stream: all 864 packets and their timestamps were checked, and every complete file decoded successfully. The earlier website movie files and their original audio have been removed from this repository; immutable source films remain in the private workspace. Versioned URLs avoid reusing cached copies.
 
 These are concept films, not App Store previews or app recordings. The third-person film uses the approved adult illustration as its character texture; sixteen waveforms appear individually. Both perspectives now use only the four supplied songs. The App Store previews and built-in demo recordings are separate and unchanged.
 
-Films attempt audible playback when they enter the viewport and fall back to muted playback if the browser blocks sound. Explicit mute/volume preferences carry between films for the current visit. Films pause when they leave, and only one can play at a time. The wearer’s view is expanded by default. Reduced-motion preferences disable automatic playback; manual pauses remain respected until explicit playback. Metadata loads when a film comes into view. Selecting a different song restarts the selected film; selecting the current song resumes it.
+Films attempt audible playback when they enter the viewport and fall back to muted playback if the browser blocks sound. Explicit mute/volume preferences carry between films for the current visit. Films pause when they leave, and only one can play at a time. The wearer’s view is expanded by default. Reduced-motion preferences disable automatic playback; manual pauses remain respected until explicit playback. Metadata loads when a film comes into view. Song assignment happens before playback begins and never interrupts it.
 
-Run `node tests/film-playback.cjs` for the playback-controller regression checks, including shared choices, stale play promises, native mute/pause behavior, policy fallback, reduced motion and full-track links.
+Run `node tests/film-playback.cjs` for the playback-controller regression checks, including randomized song assignment, resource/caption consistency, stale play promises, native mute/pause behavior, policy fallback and reduced motion.
 
 ## Link previews
 

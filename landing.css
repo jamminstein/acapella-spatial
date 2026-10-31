@@ -109,7 +109,7 @@ figcaption { padding-top: 14px; font-size: .78rem; line-height: 1.5; color: var(
 .inside-meta b { font-size: 1.5rem; font-weight: 400; color: var(--ink); }
 .inside-view[open] .inside-meta b { transform: rotate(45deg); }
 .inside-view .film { margin-bottom: 1.3rem; }
-.concept-section { max-width: 1120px; }
+.cover-art { margin-top: clamp(1rem, 2vw, 1.75rem); }
 .closing-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10%; padding-top: 3.5rem; border-top: 1px solid var(--line); }
 .closing-section h2 { font-size: clamp(2.5rem,3.5vw,3.5rem); margin-bottom: 1.4rem; }
 .closing-section p { max-width: 400px; color: var(--muted); }

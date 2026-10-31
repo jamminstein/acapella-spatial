@@ -28,6 +28,7 @@ for (let i = soundtracks.length - 1; i > 0; i -= 1) {
 const filmStates = Array.from(document.querySelectorAll('video')).map(video => ({
   video,
   button: document.querySelector(`.sound-toggle[aria-controls="${video.id}"]`),
+  playButton: document.querySelector(`.film-play[aria-controls="${video.id}"]`),
   source: video.querySelector('source'),
   caption: video.querySelector('track'),
   perspective: video.dataset.perspective,
@@ -39,6 +40,7 @@ const filmStates = Array.from(document.querySelectorAll('video')).map(video => (
   starting: false,
   ignoredPauses: 0,
   playKind: null,
+  presentation: 'inline',
   request: 0,
   soundSnapshot: { muted: video.muted, volume: video.volume }
 }));
@@ -49,7 +51,17 @@ let soundVolume = 1;
 let lastAudibleVolume = 1;
 
 function syncSound(state) {
+  const stopped = state.video.paused || state.video.ended || Boolean(state.video.error);
+  if (state.playButton) {
+    state.playButton.hidden = !stopped;
+    const action = state.video.error ? 'Try again' : state.video.ended ? 'Replay' : 'Play';
+    const label = state.playButton.querySelector('[data-play-label]');
+    if (label) label.textContent = action;
+    const perspective = state.perspective === 'third' ? 'viewer’s' : 'user’s';
+    state.playButton.setAttribute('aria-label', `${action}, ${perspective} perspective video`);
+  }
   if (!state.button) return;
+  state.button.hidden = stopped;
   const audible = !state.video.muted && state.video.volume > 0;
   state.button.setAttribute('aria-pressed', String(audible));
   const label = state.button.querySelector('[data-sound-label]');
@@ -87,12 +99,22 @@ function pauseFilm(state) {
   // Also cancel a pending play() request, even if playback has not begun.
   state.video.pause();
   if (activeFilm === state) activeFilm = null;
+  syncSound(state);
+}
+
+function isPresentedSeparately(state) {
+  const video = state.video;
+  return state.presentation !== 'inline' || video.webkitDisplayingFullscreen ||
+    video.webkitPresentationMode === 'fullscreen' ||
+    video.webkitPresentationMode === 'picture-in-picture' ||
+    document.fullscreenElement === video || document.pictureInPictureElement === video;
 }
 
 function canContinue(state, kind) {
   const details = state.video.closest('.inside-view');
-  return !document.hidden && (!details || details.open) &&
-    (kind === 'manual' || (state.visible && !state.userPaused && !reducedMotion.matches));
+  const separate = isPresentedSeparately(state);
+  return (!document.hidden || separate) && (!details || details.open) &&
+    (kind === 'manual' || ((state.visible || separate) && !state.userPaused && !reducedMotion.matches));
 }
 
 function startFilm(state, kind) {
@@ -128,13 +150,14 @@ function startFilm(state, kind) {
   function attempt(allowFallback) {
     if (!isCurrent() || !canContinue(state, kind)) return;
     try {
-      // Keep this call synchronous with Sound on clicks so browsers
+      // Keep this call synchronous with Play and Sound on taps so browsers
       // can grant their normal user-activation permission for audible playback.
       const started = state.video.play();
       Promise.resolve(started).then(() => {
         if (!isCurrent()) return;
         state.starting = false;
         if (!canContinue(state, kind)) pauseFilm(state);
+        syncSound(state);
       }, error => failed(error, allowFallback));
     } catch (error) {
       failed(error, allowFallback);
@@ -145,9 +168,11 @@ function startFilm(state, kind) {
 
 function playVisibleFilm() {
   if (!automaticPlaybackEnabled || reducedMotion.matches || document.hidden) return;
+  // A native player owns the experience even when the user pauses it.
+  if (filmStates.some(isPresentedSeparately)) return;
   // Keep explicit playback in control until it leaves the viewport.
   if (activeFilm && (activeFilm.starting || !activeFilm.video.paused) &&
-      (activeFilm.playKind === 'manual' ||
+      (isPresentedSeparately(activeFilm) || activeFilm.playKind === 'manual' ||
        (activeFilm.visible && activeFilm.ratio >= 0.35))) return;
   const candidate = filmStates
     .filter(state => state.visible && state.ratio >= 0.35 && !state.userPaused &&
@@ -191,7 +216,9 @@ filmStates.forEach(state => {
     state.autoBlocked = false;
     filmStates.forEach(other => { if (other !== state) pauseFilm(other); });
     activeFilm = state;
+    syncSound(state);
   });
+  video.addEventListener('playing', () => syncSound(state));
   video.addEventListener('pause', () => {
     if (state.ignoredPauses > 0) {
       state.ignoredPauses -= 1;
@@ -205,13 +232,31 @@ filmStates.forEach(state => {
     state.starting = false;
     state.playKind = null;
     if (activeFilm === state) activeFilm = null;
+    syncSound(state);
   });
   video.addEventListener('ended', () => {
     state.request += 1;
     state.starting = false;
     state.playKind = null;
     if (activeFilm === state) activeFilm = null;
+    syncSound(state);
   });
+  video.addEventListener('error', () => {
+    pauseFilm(state);
+    state.autoBlocked = true;
+  });
+  if (state.playButton) {
+    state.playButton.addEventListener('click', () => {
+      filmStates.forEach(rememberNativeSound);
+      if (video.error) {
+        video.load();
+        state.ignoredPauses = 0;
+      }
+      // Safari requires play() in the tap handler itself, before any await or
+      // media-ready callback. Keep the selected song and explicit mute choice.
+      startFilm(state, 'manual');
+    });
+  }
   if (state.button) {
     state.button.addEventListener('click', () => {
       const enable = video.muted || video.volume === 0;
@@ -220,6 +265,19 @@ filmStates.forEach(state => {
       if (enable) startFilm(state, 'manual');
     });
   }
+  function presentationChanged(mode) {
+    state.presentation = mode;
+    if (mode !== 'inline' && !video.paused) state.playKind = 'manual';
+    if (mode === 'inline' && !isPresentedSeparately(state) &&
+        (!state.visible || document.hidden)) pauseFilm(state);
+  }
+  video.addEventListener('webkitbeginfullscreen', () => presentationChanged('fullscreen'));
+  video.addEventListener('webkitendfullscreen', () => presentationChanged('inline'));
+  video.addEventListener('webkitpresentationmodechanged', () => {
+    presentationChanged(video.webkitPresentationMode || 'inline');
+  });
+  video.addEventListener('enterpictureinpicture', () => presentationChanged('picture-in-picture'));
+  video.addEventListener('leavepictureinpicture', () => presentationChanged('inline'));
 });
 
 if ('IntersectionObserver' in window) {
@@ -230,7 +288,7 @@ if ('IntersectionObserver' in window) {
       state.visible = entry.isIntersecting && entry.intersectionRatio > 0;
       state.ratio = entry.intersectionRatio;
       if (!state.visible) {
-        pauseFilm(state);
+        if (!isPresentedSeparately(state)) pauseFilm(state);
         state.autoBlocked = false;
       } else if (state.video.preload === 'none') {
         state.video.preload = 'metadata';
@@ -251,8 +309,15 @@ reducedMotion.addEventListener('change', () => {
   }
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) filmStates.forEach(state => pauseFilm(state));
+  if (document.hidden) filmStates.forEach(state => {
+    if (!isPresentedSeparately(state)) pauseFilm(state);
+  });
   else playVisibleFilm();
+});
+document.addEventListener('fullscreenchange', () => {
+  filmStates.forEach(state => {
+    if (!isPresentedSeparately(state) && (!state.visible || document.hidden)) pauseFilm(state);
+  });
 });
 document.querySelectorAll('.inside-view').forEach(details => {
   details.addEventListener('toggle', () => {

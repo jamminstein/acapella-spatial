@@ -13,7 +13,7 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
     emit(name, detail = {}) { for (const fn of this.listeners[name] || []) fn({ button: 0, ...detail }); }
   }
   class Button extends Target {
-    constructor() { super(); this.attrs = {}; this.dataset = {}; this.label = { textContent: '' }; }
+    constructor() { super(); this.attrs = {}; this.dataset = {}; this.hidden = true; this.label = { textContent: '' }; }
     getAttribute(name) { return this.attrs[name]; }
     setAttribute(name, value) { this.attrs[name] = value; }
     querySelector() { return this.label; }
@@ -24,7 +24,7 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
   class Video extends Target {
     constructor(id) {
       super(); Object.assign(this, { id, _muted: false, _volume: 1, paused: true,
-        ended: false, preload: 'none', calls: [], plans: [], pending: [], loads: 0, currentTime: 0 });
+        ended: false, preload: 'metadata', error: null, webkitDisplayingFullscreen: false, webkitPresentationMode: 'inline', calls: [], plans: [], pending: [], loads: 0, currentTime: 0 });
       this.dataset = { perspective: id.startsWith('third') ? 'third' : 'first', soundtrack: 'mouth-made-symphony' };
       this.source = { src: `media/videos/soundtracks-v2/${this.dataset.perspective}-mouth-made-symphony.mp4` };
       this.caption = { src: 'media/videos/soundtracks-v2/mouth-made-symphony.vtt', track: { mode: 'disabled' } };
@@ -35,7 +35,7 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
     }
     querySelector(selector) { return { 'source': this.source, 'track': this.caption, '[data-film-fallback]': this.fallback }[selector] || null; }
     load() {
-      this.loads++; this.paused = true; this.ended = false; this.currentTime = 0;
+      this.loads++; this.paused = true; this.ended = false; this.error = null; this.currentTime = 0;
       // A native load clears queued tasks from the old media resource.
       for (let n = mediaEvents.length - 1; n >= 0; n--) {
         if (mediaEvents[n].video === this && ['play', 'pause'].includes(mediaEvents[n].mediaType)) mediaEvents.splice(n, 1);
@@ -70,12 +70,14 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
   }
   const videos = [new Video('third-person-film'), new Video('first-person-film')];
   const buttons = [new Button(), new Button()];
+  const playButtons = [new Button(), new Button()];
   const motion = new Target(); motion.matches = reduced;
   const policy = { open: false };
   const privacyLink = new Target();
   const document = new Target(); document.hidden = false; document.body = { dataset: { autoplay: autoplay ? 'on' : 'off' } };
   document.querySelector = selector => selector === '.privacy-details' ? policy :
-    buttons[videos.findIndex(video => selector === `.sound-toggle[aria-controls="${video.id}"]`)];
+    buttons[videos.findIndex(video => selector === `.sound-toggle[aria-controls="${video.id}"]`)] ||
+    playButtons[videos.findIndex(video => selector === `.film-play[aria-controls="${video.id}"]`)];
   document.querySelectorAll = selector => ({
     'video': videos, 'a[href="#privacy"]': [privacyLink], '.inside-view': [details]
   })[selector] || [];
@@ -108,7 +110,7 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
   }
   const rejectPolicy = (index) => videos[index].pending.shift().reject(Object.assign(new Error('late policy'), { name: 'NotAllowedError' }));
   const soundOn = index => { videos[index].muted = true; buttons[index].emit('click'); };
-  return { videos, buttons, enter, switchTo, flush, rejectPolicy, motion, document,
+  return { videos, buttons, playButtons, enter, switchTo, flush, rejectPolicy, motion, document,
     details, window, policy, privacyLink, soundOn };
 }
 
@@ -263,7 +265,7 @@ test('each visit assigns distinct playable songs with matching captions and fall
         assert(fs.existsSync(path.join(__dirname, '..', resource)), `Missing media: ${resource}`);
       }
       assert.equal(video.calls.length, 0);
-      assert.equal(video.preload, 'none');
+      assert.equal(video.preload, 'metadata');
     });
   }
   heard.forEach(songs => assert.deepEqual(songs, expected));
@@ -285,6 +287,99 @@ test('manual-only mode still allows Sound on without autoplay', async () => {
   const f = fixture({ autoplay: false }); f.enter(0); f.enter(1); await f.flush();
   assert(f.videos.every(video => video.calls.length === 0));
   f.soundOn(1); await f.flush(); assert.equal(f.videos[1].paused, false);
+});
+
+test('a stopped video offers Play instead of a misleading sound toggle', async () => {
+  const f = fixture({ reduced: true });
+  assert.equal(f.playButtons[0].hidden, false);
+  assert.equal(f.playButtons[0].label.textContent, 'Play');
+  assert.equal(f.buttons[0].hidden, true);
+  f.playButtons[0].emit('click');
+  assert.deepEqual(f.videos[0].calls, [{ muted: false, volume: 1 }]);
+  await f.flush();
+  assert.equal(f.playButtons[0].hidden, true);
+  assert.equal(f.buttons[0].hidden, false);
+});
+test('one Play tap recovers when Safari blocks both autoplay attempts', async () => {
+  const f = fixture(); f.videos[0].plans.push('policy', 'policy'); f.enter(0); await f.flush();
+  assert.equal(f.playButtons[0].hidden, false);
+  assert.equal(f.buttons[0].hidden, true);
+  f.playButtons[0].emit('click');
+  assert.equal(f.videos[0].calls.length, 3);
+  assert.equal(f.videos[0].calls[2].muted, false);
+  await f.flush(); assert.equal(f.videos[0].paused, false);
+});
+test('native pause reveals Play and one tap resumes without resetting the song or playhead', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  const resource = f.videos[0].source.src;
+  f.videos[0].currentTime = 12; f.videos[0].pause(); await f.flush();
+  assert.equal(f.playButtons[0].hidden, false); assert.equal(f.buttons[0].hidden, true);
+  f.playButtons[0].emit('click'); await f.flush();
+  assert.equal(f.videos[0].paused, false); assert.equal(f.videos[0].currentTime, 12);
+  assert.equal(f.videos[0].source.src, resource);
+});
+test('Play respects a deliberate mute', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  f.buttons[0].emit('click'); await f.flush(); f.videos[0].pause(); await f.flush();
+  f.playButtons[0].emit('click'); await f.flush();
+  assert.equal(f.videos[0].paused, false); assert.equal(f.videos[0].muted, true);
+});
+test('a media error exposes a retry that reloads and plays in the same click', async () => {
+  const f = fixture(); const loads = f.videos[0].loads;
+  f.videos[0].error = { code: 2 }; f.videos[0].emit('error'); await f.flush();
+  assert.equal(f.playButtons[0].hidden, false); assert.equal(f.playButtons[0].label.textContent, 'Try again');
+  f.playButtons[0].emit('click');
+  assert.equal(f.videos[0].loads, loads + 1); assert.equal(f.videos[0].calls.length, 1);
+  await f.flush(); assert.equal(f.videos[0].paused, false);
+});
+test('an ended video offers Replay', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  f.videos[0].ended = true; f.videos[0].pause(); f.videos[0].emit('ended'); await f.flush();
+  assert.equal(f.playButtons[0].hidden, false); assert.equal(f.playButtons[0].label.textContent, 'Replay');
+});
+test('Safari fullscreen survives offscreen reports and page visibility changes', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  f.videos[0].webkitDisplayingFullscreen = true; f.videos[0].emit('webkitbeginfullscreen');
+  f.enter(0, 0); f.document.hidden = true; f.document.emit('visibilitychange'); await f.flush();
+  assert.equal(f.videos[0].paused, false);
+  f.videos[0].webkitDisplayingFullscreen = false; f.videos[0].emit('webkitendfullscreen'); await f.flush();
+  assert.equal(f.videos[0].paused, true);
+});
+test('inline autoplay cannot steal playback from Safari fullscreen', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  f.videos[0].webkitDisplayingFullscreen = true; f.videos[0].emit('webkitbeginfullscreen');
+  f.switchTo(0, 1); await f.flush();
+  assert.equal(f.videos[0].paused, false); assert.equal(f.videos[1].calls.length, 0);
+});
+test('picture-in-picture continues outside the page and pauses on return offscreen', async () => {
+  const f = fixture(); f.enter(1); await f.flush();
+  f.videos[1].webkitPresentationMode = 'picture-in-picture'; f.videos[1].emit('webkitpresentationmodechanged');
+  f.enter(1, 0); f.document.hidden = true; f.document.emit('visibilitychange'); await f.flush();
+  assert.equal(f.videos[1].paused, false);
+  f.videos[1].webkitPresentationMode = 'inline'; f.videos[1].emit('webkitpresentationmodechanged'); await f.flush();
+  assert.equal(f.videos[1].paused, true);
+});
+test('standard fullscreen receives the same offscreen protection', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  f.document.fullscreenElement = f.videos[0]; f.document.emit('fullscreenchange');
+  f.switchTo(0, 1); await f.flush(); assert.equal(f.videos[0].paused, false);
+  f.document.fullscreenElement = null; f.document.emit('fullscreenchange'); await f.flush();
+  assert.equal(f.videos[0].paused, true);
+});
+
+test('pausing fullscreen does not start a different inline video', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  f.videos[0].webkitDisplayingFullscreen = true; f.videos[0].emit('webkitbeginfullscreen');
+  f.videos[0].pause(); await f.flush(); f.switchTo(0, 1); await f.flush();
+  assert.equal(f.videos[1].calls.length, 0);
+});
+test('fullscreen-to-PiP handoff does not pause between Safari presentation events', async () => {
+  const f = fixture(); f.enter(0); await f.flush();
+  f.videos[0].webkitDisplayingFullscreen = true; f.videos[0].emit('webkitbeginfullscreen'); f.enter(0, 0);
+  f.videos[0].webkitPresentationMode = 'picture-in-picture';
+  f.videos[0].webkitDisplayingFullscreen = false; f.videos[0].emit('webkitendfullscreen');
+  f.videos[0].emit('webkitpresentationmodechanged'); await f.flush();
+  assert.equal(f.videos[0].paused, false);
 });
 
 (async () => {

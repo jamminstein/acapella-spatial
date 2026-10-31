@@ -205,9 +205,5 @@ body[data-player="native"] .film-play, body[data-player="native"] .film-under { 
 .singing-mask:hover, .singing-mask:focus-visible { transform: rotate(-4deg) translateY(0); }
 .mask-high:hover, .mask-high:focus-visible { transform: rotate(3deg) translateY(-14px); }
 .singing-mask[data-singing="true"] { animation: mask-wah 850ms ease both; }
-.mask-syllable { position: absolute; left: 64px; top: 84px; font: 26px var(--display); color: var(--orange); opacity: 0; pointer-events: none; }
-.mask-high .mask-syllable { left: 67px; top: 63px; }
-.singing-mask[data-singing="true"] .mask-syllable { animation: mask-syllable 850ms ease both; }
 @keyframes mask-wah { 0%, 100% { transform: rotate(-5deg); } 35% { transform: rotate(3deg) translateY(-7px) scale(1.025); } 65% { transform: rotate(-2deg) translateY(-3px); } }
-@keyframes mask-syllable { 0%, 100% { opacity: 0; transform: translate(0,0); } 25% { opacity: .85; } 90% { opacity: 0; transform: translate(14px,-18px); } }
-@media (prefers-reduced-motion: reduce) { .singing-mask, .mask-high, .singing-mask:hover, .singing-mask:focus-visible { transform: none; transition: none; } .singing-mask[data-singing="true"], .singing-mask[data-singing="true"] .mask-syllable { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .singing-mask, .mask-high, .singing-mask:hover, .singing-mask:focus-visible { transform: none; transition: none; } .singing-mask[data-singing="true"] { animation: none; } }

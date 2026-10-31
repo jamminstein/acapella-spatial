@@ -199,9 +199,15 @@ filmStates.forEach((state, index) => {
     const soundtrack = soundtracks[index % soundtracks.length];
     state.soundtrack = soundtrack;
     video.dataset.soundtrack = soundtrack;
+    // Safari can reject the media source while an external text track is
+    // attached during source selection. Restore captions after metadata loads.
+    if (state.caption) {
+      state.caption.remove();
+      state.caption.src = `${filmRoot}/${soundtrack}.vtt`;
+      video.addEventListener('loadedmetadata', () => video.append(state.caption), { once: true });
+    }
     state.source.src = `${filmRoot}/${state.perspective}-${soundtrack}.mp4`;
     video.src = state.source.src;
-    if (state.caption) state.caption.src = `${filmRoot}/${soundtrack}.vtt`;
   }
   const fallback = state.video.querySelector('[data-film-fallback]');
   if (fallback) fallback.href = state.source.src;

@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#f5f2eb"/><g fill="none" stroke="#c84a23" stroke-width="5" stroke-linecap="round"><path d="M12 29v6m10-15v24m10-33v42m10-31v20m10-14v8"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="peach" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#f9c7ac"/>
+      <stop offset=".45" stop-color="#eda584"/>
+      <stop offset="1" stop-color="#d78669"/>
+    </linearGradient>
+    <radialGradient id="pearl" cx=".3" cy=".2" r=".8">
+      <stop stop-color="#fffefb"/>
+      <stop offset="1" stop-color="#cfc4b6"/>
+    </radialGradient>
+    <path id="wave" d="M12 36v8m8-18v22m8-33v34m8-32v24m8-24v16m8-14v6"/>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#f5f2eb"/>
+  <path d="M10 49 55 33" fill="none" stroke="#dfd7ca" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+  <g fill="none" stroke-linecap="round">
+    <use href="#wave" stroke="#b97862" stroke-width="6.5" transform="translate(2 2)"/>
+    <use href="#wave" stroke="url(#peach)" stroke-width="6.5"/>
+    <use href="#wave" stroke="#ffe1c9" stroke-width="1.5" transform="translate(-1 0)" opacity=".8"/>
+  </g>
+  <circle cx="6.5" cy="42" r="3.5" fill="url(#pearl)"/>
+  <circle cx="58" cy="20" r="3.5" fill="url(#pearl)"/>
+</svg>

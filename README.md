@@ -32,6 +32,12 @@ Only public-facing approved artwork, screenshots, and final marketing films belo
 
 The generated room backdrops are marketing staging, not environments included in Acapella. Accessible film labels describe their animation and perspective. Visitor-facing copy should earn its place: omit duration badges, captions that merely describe what is already visible, and automatic-sounding filler. Keep useful controls, meaningful copy, and accessible descriptions. Production terminology stays in this documentation. The separate illustration section intentionally contains only the text-free artwork, without a caption or explanatory copy, as requested.
 
+### App icon
+
+The hero uses the three original production PNGs from the app’s `Assets.xcassets/AppIcon.solidimagestack`, copied unchanged into `media/icon/`. They show two terracotta singing faces on ivory; the separate isometric singer study is not used.
+
+`icon.js` and the `.icon-showcase` styles provide a website approximation of layered depth: a circular back, two raised artwork planes, a soft highlight, pointer tilt, subtle scroll movement, and a brief turn on tap or keyboard activation. The gesture never captures touch scrolling or requests motion-sensor access. It settles after interaction, stops while offscreen or hidden, and becomes static with Reduce Motion or without JavaScript. This does not alter the native app icon or its submitted build.
+
 ### Film integration
 
 Keep the short landing page free of hero navigation buttons and song pickers. Same-page anchor links use plain labels without arrows.

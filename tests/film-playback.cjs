@@ -297,6 +297,26 @@ test('changing music preserves a manual pause on the other perspective', async (
   f.switchTo(0, 1); await f.flush(); assert.equal(f.videos[1].calls.length, calls);
   f.choose(1, 'clicks-in-cheek'); await f.flush(); assert.equal(f.videos[1].paused, false);
 });
+test('queued native pause survives a source switch before its event is delivered', async () => {
+  const f = fixture(); f.enter(1); await f.flush(); f.videos[1].pause();
+  f.choose(0, 'clicks-in-cheek'); await f.flush(); f.switchTo(0, 1); await f.flush();
+  assert.equal(f.videos[1].paused, true); assert.equal(f.videos[1].calls.length, 1);
+});
+test('native pause during a pending play remains explicit after changing sources', async () => {
+  const f = fixture(); f.videos[1].plans.push('pending'); f.enter(1); f.videos[1].pause();
+  f.choose(0, 'breath-and-clicks'); f.rejectPolicy(1); await f.flush(); f.switchTo(0, 1); await f.flush();
+  assert.equal(f.videos[1].paused, true); assert.equal(f.videos[1].calls.length, 1);
+});
+test('pending policy rejection is not mistaken for a manual pause during a source swap', async () => {
+  const f = fixture(); f.videos[1].plans.push('policy'); f.enter(1);
+  f.choose(0, 'clicks-in-cheek'); await f.flush(); f.switchTo(0, 1); await f.flush();
+  assert.equal(f.videos[1].paused, false); assert.equal(f.videos[1].calls.length, 2);
+});
+test('queued offscreen pause still permits automatic playback after a source swap', async () => {
+  const f = fixture(); f.enter(1); await f.flush(); f.enter(1, 0);
+  f.choose(0, 'clicks-in-cheek'); await f.flush(); f.switchTo(0, 1); await f.flush();
+  assert.equal(f.videos[1].paused, false); assert.equal(f.videos[1].calls.length, 2);
+});
 test('same selected track resumes without reloading or resetting playhead', async () => {
   const f = fixture(); f.enter(0); await f.flush(); f.videos[0].currentTime = 14; f.videos[0].pause(); await f.flush();
   f.choose(0, 'mouth-made-symphony'); await f.flush();

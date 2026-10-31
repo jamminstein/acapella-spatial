@@ -35,6 +35,7 @@ const filmStates = Array.from(document.querySelectorAll('video')).map(video => (
   starting: false,
   ignoredPauses: 0,
   playKind: null,
+  wasUnpaused: false,
   request: 0,
   soundSnapshot: { muted: video.muted, volume: video.volume }
 }));
@@ -98,6 +99,7 @@ function startFilm(state, kind) {
   if (kind === 'manual') state.userPaused = false;
   state.autoBlocked = false;
   state.starting = true;
+  state.wasUnpaused = false;
   state.playKind = kind;
   activeFilm = state;
   const request = ++state.request;
@@ -127,6 +129,7 @@ function startFilm(state, kind) {
       // Keep this call synchronous with Sound on / Watch clicks so browsers
       // can grant their normal user-activation permission for audible playback.
       const started = state.video.play();
+      state.wasUnpaused = !state.video.paused;
       Promise.resolve(started).then(() => {
         if (!isCurrent()) return;
         state.starting = false;
@@ -170,6 +173,7 @@ filmStates.forEach(state => {
     }
     if (!state.playKind) state.request += 1;
     state.playKind = kind;
+    state.wasUnpaused = true;
     state.userPaused = false;
     state.autoBlocked = false;
     filmStates.forEach(other => { if (other !== state) pauseFilm(other); });
@@ -236,7 +240,14 @@ function replaceSoundtrack(state, id) {
 
 function chooseSoundtrack(state, id) {
   if (!soundtracks.some(track => track.id === id)) return;
-  filmStates.forEach(rememberNativeSound);
+  filmStates.forEach(film => {
+    rememberNativeSound(film);
+    // load() discards queued native pause events. Preserve a pause already
+    // visible on a playing film before replacing either media resource.
+    // Blocked play requests and our own pending pauses are not user pauses.
+    if (film.playKind && film.wasUnpaused && film.video.paused &&
+        !film.video.ended && film.ignoredPauses === 0) film.userPaused = true;
+  });
   selectedSoundtrack = id;
   filmStates.forEach(film => replaceSoundtrack(film, id));
   updateSoundtrackControls();

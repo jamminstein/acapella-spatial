@@ -34,6 +34,8 @@ The generated room backdrops are marketing staging, not environments included in
 
 ### Film integration
 
+Use “Video” in visitor-facing navigation and calls to action. Same-page anchor links use plain labels without arrows.
+
 The two 36-second concept films share four soundtrack choices: **Mouth Party** (default), **Puff Parade**, **Breath Club**, and **Cheeky Beats**. The owner supplied all four recordings. Each pastel button starts that perspective with the chosen music; the other perspective adopts the same selection. Native video controls remain available. The full-track link opens the complete selected recording and pauses the films.
 
 `media/videos/soundtracks-v2/` contains eight H.264/AAC variants, named `{third,first}-{track-id}.mp4`, plus one VTT sound-description track per song. `media/audio/soundtracks-v2/` contains the four complete recordings converted from Opus to AAC for browser compatibility. Each film uses 0:00–0:36 of its selected track with a 0.75-second ending fade. No volume adjustment was needed. Every variant preserves the original 1920 × 1080, 24 fps video stream: all 864 packets and their timestamps were checked, and every complete file decoded successfully. The earlier website movie files and their original audio have been removed from this repository; immutable source films remain in the private workspace. Versioned URLs avoid reusing cached copies.

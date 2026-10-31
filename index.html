@@ -24,8 +24,9 @@
   <link rel="canonical" href="https://jamminstein.github.io/acapella-spatial/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/AcapellaAir.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="landing.css?v=20261031-safari">
+  <link rel="stylesheet" href="landing.css?v=20261031-icon">
   <script src="landing.js?v=20261031-safari" defer></script>
+  <script src="icon.js?v=20261031-icon" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -37,7 +38,16 @@
     <section class="hero shell" aria-labelledby="hero-title">
       <div class="hero-heading">
         <div><p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Coming to Apple Vision Pro</p><h1 id="hero-title">Sing into <br>the air<span class="orange">.</span></h1></div>
-        <div class="hero-intro"><p class="lead">Start with a hum.</p><p>Add another. See where it goes.</p></div>
+        <div class="hero-intro">
+          <button class="icon-showcase" type="button" aria-label="Acapella app icon" disabled>
+            <span class="app-icon" aria-hidden="true">
+              <span class="icon-layer icon-back"><img src="media/icon/back.png" width="1024" height="1024" alt="" draggable="false"></span>
+              <span class="icon-layer icon-middle"><img src="media/icon/middle.png" width="1024" height="1024" alt="" draggable="false"></span>
+              <span class="icon-layer icon-front"><img src="media/icon/front.png" width="1024" height="1024" alt="" draggable="false"></span>
+            </span>
+          </button>
+          <div class="hero-voice-copy"><p class="lead">Start with a hum.</p><p>Add another. See where it goes.</p></div>
+        </div>
       </div>
       <figure>
         <a class="image-link" href="media/originals/small-studio-play.jpg" aria-label="View the full-resolution home studio image">

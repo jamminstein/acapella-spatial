@@ -38,6 +38,8 @@ The hero uses the approved isometric singer icon from the October 31 study: an a
 
 `icon.js` and the `.icon-showcase` styles provide a website approximation of layered depth: a circular back, two raised artwork planes, a soft highlight, pointer tilt, subtle scroll movement, and a brief turn on tap or keyboard activation. The gesture never captures touch scrolling or requests motion-sensor access. It settles after interaction, stops while offscreen or hidden, and becomes static with Reduce Motion or without JavaScript. The website adds motion to the same artwork used by the native app; Apple supplies the native icon’s lighting and depth.
 
+The two terracotta masks from the earlier icon live near the footer as a small Easter egg. `masks.js` synthesizes a short low or high vowel glide on hover, click, or keyboard activation using local Web Audio oscillators and formant filters. Safari may need a first tap to unlock sound. Notes stop when leaving a mask, pressing Escape, hiding the page, or starting a film; they never play over an audible film. The pair uses the original transparent mask layers, respects Reduce Motion, and makes no microphone or network requests.
+
 ### Film integration
 
 Keep the short landing page free of hero navigation buttons and song pickers. Same-page anchor links use plain labels without arrows.

@@ -193,3 +193,21 @@ body[data-player="native"] .film-play, body[data-player="native"] .film-under { 
   .app-icon, .icon-middle, .icon-front { transform: none; }
   .app-icon::after { display: none; }
 }
+
+/* The original clay faces return as a small, playable signature. */
+.mask-duet { display: flex; justify-content: center; align-items: center; gap: 24px; padding: 42px 0 12px; }
+.singing-mask { position: relative; width: 76px; height: 166px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; transform: rotate(-9deg) translateY(9px); transition: transform 260ms ease; }
+.singing-mask:disabled { cursor: default; }
+.mask-high { transform: rotate(8deg) translateY(-9px); }
+.mask-art { display: block; position: absolute; inset: 0; overflow: hidden; pointer-events: none; filter: drop-shadow(0 7px 6px #7144261c); }
+.mask-art img { position: absolute; max-width: none; width: 280px; height: 280px; left: -44px; top: -82px; user-select: none; }
+.mask-high img { width: 254px; height: 254px; left: -135px; top: -27px; }
+.singing-mask:hover, .singing-mask:focus-visible { transform: rotate(-4deg) translateY(0); }
+.mask-high:hover, .mask-high:focus-visible { transform: rotate(3deg) translateY(-14px); }
+.singing-mask[data-singing="true"] { animation: mask-wah 850ms ease both; }
+.mask-syllable { position: absolute; left: 64px; top: 84px; font: 26px var(--display); color: var(--orange); opacity: 0; pointer-events: none; }
+.mask-high .mask-syllable { left: 67px; top: 63px; }
+.singing-mask[data-singing="true"] .mask-syllable { animation: mask-syllable 850ms ease both; }
+@keyframes mask-wah { 0%, 100% { transform: rotate(-5deg); } 35% { transform: rotate(3deg) translateY(-7px) scale(1.025); } 65% { transform: rotate(-2deg) translateY(-3px); } }
+@keyframes mask-syllable { 0%, 100% { opacity: 0; transform: translate(0,0); } 25% { opacity: .85; } 90% { opacity: 0; transform: translate(14px,-18px); } }
+@media (prefers-reduced-motion: reduce) { .singing-mask, .mask-high, .singing-mask:hover, .singing-mask:focus-visible { transform: none; transition: none; } .singing-mask[data-singing="true"], .singing-mask[data-singing="true"] .mask-syllable { animation: none; } }

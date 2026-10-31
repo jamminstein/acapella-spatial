@@ -13,21 +13,25 @@ document.querySelectorAll('a[href="#privacy"]').forEach(link => {
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const automaticPlaybackEnabled = document.body.dataset.autoplay !== 'off';
 const filmRoot = document.body.dataset.filmRoot || 'media/videos/soundtracks-v2';
-const fullTrackRoot = document.body.dataset.fullTrackRoot || 'media/audio/soundtracks-v2';
 const soundtracks = [
-  { id: 'mouth-made-symphony', title: 'Mouth Party' },
-  { id: 'breath-and-clicks-2', title: 'Puff Parade' },
-  { id: 'breath-and-clicks', title: 'Breath Club' },
-  { id: 'clicks-in-cheek', title: 'Cheeky Beats' }
+  'mouth-made-symphony',
+  'breath-and-clicks-2',
+  'breath-and-clicks',
+  'clicks-in-cheek'
 ];
-let selectedSoundtrack = soundtracks[0].id;
+// Shuffle once per visit. Each perspective gets a different song, and its
+// music stays put across pauses, scrolling, and replays.
+for (let i = soundtracks.length - 1; i > 0; i -= 1) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [soundtracks[i], soundtracks[j]] = [soundtracks[j], soundtracks[i]];
+}
 const filmStates = Array.from(document.querySelectorAll('video')).map(video => ({
   video,
   button: document.querySelector(`.sound-toggle[aria-controls="${video.id}"]`),
   source: video.querySelector('source'),
   caption: video.querySelector('track'),
   perspective: video.dataset.perspective,
-  soundtrack: video.dataset.soundtrack || selectedSoundtrack,
+  soundtrack: video.dataset.soundtrack,
   visible: false,
   ratio: 0,
   userPaused: false,
@@ -35,7 +39,6 @@ const filmStates = Array.from(document.querySelectorAll('video')).map(video => (
   starting: false,
   ignoredPauses: 0,
   playKind: null,
-  wasUnpaused: false,
   request: 0,
   soundSnapshot: { muted: video.muted, volume: video.volume }
 }));
@@ -99,7 +102,6 @@ function startFilm(state, kind) {
   if (kind === 'manual') state.userPaused = false;
   state.autoBlocked = false;
   state.starting = true;
-  state.wasUnpaused = false;
   state.playKind = kind;
   activeFilm = state;
   const request = ++state.request;
@@ -126,10 +128,9 @@ function startFilm(state, kind) {
   function attempt(allowFallback) {
     if (!isCurrent() || !canContinue(state, kind)) return;
     try {
-      // Keep this call synchronous with Sound on / Watch clicks so browsers
+      // Keep this call synchronous with Sound on clicks so browsers
       // can grant their normal user-activation permission for audible playback.
       const started = state.video.play();
-      state.wasUnpaused = !state.video.paused;
       Promise.resolve(started).then(() => {
         if (!isCurrent()) return;
         state.starting = false;
@@ -144,8 +145,7 @@ function startFilm(state, kind) {
 
 function playVisibleFilm() {
   if (!automaticPlaybackEnabled || reducedMotion.matches || document.hidden) return;
-  // An explicit Watch click may start while its anchor is scrolling into view.
-  // Intersection/visibility events still cancel it when the film leaves view.
+  // Keep explicit playback in control until it leaves the viewport.
   if (activeFilm && (activeFilm.starting || !activeFilm.video.paused) &&
       (activeFilm.playKind === 'manual' ||
        (activeFilm.visible && activeFilm.ratio >= 0.35))) return;
@@ -156,6 +156,20 @@ function playVisibleFilm() {
   if (!candidate || candidate.starting || !candidate.video.paused) return;
   startFilm(candidate, 'auto');
 }
+
+// Choose resources before playback listeners are attached. load() resets the
+// default HTML source without starting playback or changing sound preferences.
+filmStates.forEach((state, index) => {
+  const soundtrack = soundtracks[index % soundtracks.length];
+  if (state.soundtrack === soundtrack) return;
+  state.soundtrack = soundtrack;
+  state.video.dataset.soundtrack = soundtrack;
+  state.source.src = `${filmRoot}/${state.perspective}-${soundtrack}.mp4`;
+  if (state.caption) state.caption.src = `${filmRoot}/${soundtrack}.vtt`;
+  const fallback = state.video.querySelector('[data-film-fallback]');
+  if (fallback) fallback.href = state.source.src;
+  state.video.load();
+});
 
 filmStates.forEach(state => {
   const video = state.video;
@@ -173,7 +187,6 @@ filmStates.forEach(state => {
     }
     if (!state.playKind) state.request += 1;
     state.playKind = kind;
-    state.wasUnpaused = true;
     state.userPaused = false;
     state.autoBlocked = false;
     filmStates.forEach(other => { if (other !== state) pauseFilm(other); });
@@ -207,83 +220,6 @@ filmStates.forEach(state => {
       if (enable) startFilm(state, 'manual');
     });
   }
-});
-
-function updateSoundtrackControls() {
-  const track = soundtracks.find(item => item.id === selectedSoundtrack);
-  document.querySelectorAll('.soundtrack-button').forEach(button => {
-    button.setAttribute('aria-pressed', String(button.dataset.soundtrack === selectedSoundtrack));
-  });
-  document.querySelectorAll('[data-full-track]').forEach(link => {
-    link.href = `${fullTrackRoot}/${selectedSoundtrack}.m4a`;
-    link.setAttribute('aria-label', `Listen to the full ${track.title} track`);
-    const label = link.querySelector('[data-full-track-label]');
-    if (label) label.textContent = `Full track: ${track.title}`;
-  });
-}
-
-function replaceSoundtrack(state, id) {
-  if (state.soundtrack === id) return;
-  pauseFilm(state);
-  state.soundtrack = id;
-  state.video.dataset.soundtrack = id;
-  const captionMode = state.caption && state.caption.track && state.caption.track.mode;
-  state.source.src = `${filmRoot}/${state.perspective}-${id}.mp4`;
-  if (state.caption) state.caption.src = `${filmRoot}/${id}.vtt`;
-  const fallback = state.video.querySelector('[data-film-fallback]');
-  if (fallback) fallback.href = state.source.src;
-  // load() aborts old resource requests and clears their queued media events.
-  // Reset only our consumed-pause accounting; preserve an explicit user pause.
-  state.video.load();
-  state.ignoredPauses = 0;
-  state.autoBlocked = false;
-  if (captionMode && state.caption.track) state.caption.track.mode = captionMode;
-}
-
-function chooseSoundtrack(state, id) {
-  if (!soundtracks.some(track => track.id === id)) return;
-  filmStates.forEach(film => {
-    rememberNativeSound(film);
-    // load() discards queued native pause events. Preserve a pause already
-    // visible on a playing film before replacing either media resource.
-    // Blocked play requests and our own pending pauses are not user pauses.
-    if (film.playKind && film.wasUnpaused && film.video.paused &&
-        !film.video.ended && film.ignoredPauses === 0) film.userPaused = true;
-  });
-  selectedSoundtrack = id;
-  filmStates.forEach(film => replaceSoundtrack(film, id));
-  updateSoundtrackControls();
-  // A choice is an explicit play action. Keep play() in the click stack, and
-  // keep the user's mute/volume preference while changing the muxed resource.
-  startFilm(state, 'manual');
-}
-
-document.querySelectorAll('.soundtrack-button').forEach(button => {
-  button.addEventListener('click', () => {
-    const state = filmStates.find(film => film.video.id === button.getAttribute('aria-controls'));
-    if (state) chooseSoundtrack(state, button.dataset.soundtrack);
-  });
-});
-document.querySelectorAll('[data-full-track]').forEach(link => {
-  link.addEventListener('click', () => {
-    filmStates.forEach(state => {
-      pauseFilm(state);
-      state.userPaused = true;
-    });
-  });
-});
-updateSoundtrackControls();
-
-// This dedicated film action can request sound; unrelated page clicks cannot.
-document.querySelectorAll('.actions a[href="#films"]').forEach(link => {
-  link.addEventListener('click', event => {
-    if (event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey ||
-        event.shiftKey || event.altKey) return;
-    const state = filmStates.find(item => item.video.id === 'third-person-film');
-    if (!state) return;
-    shareSoundPreference(true, soundVolume || lastAudibleVolume);
-    startFilm(state, 'manual');
-  });
 });
 
 if ('IntersectionObserver' in window) {

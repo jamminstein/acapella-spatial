@@ -9,7 +9,13 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1, coarse
   const mediaEvents = [];
   class Target {
     constructor() { this.listeners = {}; }
-    addEventListener(name, fn) { (this.listeners[name] ||= []).push(fn); }
+    addEventListener(name, fn, options = {}) {
+      const listener = options.once ? event => {
+        this.listeners[name] = this.listeners[name].filter(item => item !== listener);
+        fn(event);
+      } : fn;
+      (this.listeners[name] ||= []).push(listener);
+    }
     emit(name, detail = {}) { for (const fn of this.listeners[name] || []) fn({ button: 0, ...detail }); }
   }
   class Button extends Target {
@@ -27,16 +33,20 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1, coarse
         ended: false, preload: 'none', played: { length: 0 }, soundWrites: [], error: null, webkitDisplayingFullscreen: false, webkitPresentationMode: 'inline', calls: [], plans: [], pending: [], loads: 0, currentTime: 0 });
       this.dataset = { perspective: id.startsWith('third') ? 'third' : 'first', soundtrack: 'mouth-made-symphony' };
       this.source = { src: `media/videos/soundtracks-v2/${this.dataset.perspective}-mouth-made-symphony.mp4` };
-      this.caption = { src: 'media/videos/soundtracks-v2/mouth-made-symphony.vtt', track: { mode: 'disabled' } };
+      this.caption = { src: 'media/videos/soundtracks-v2/mouth-made-symphony.vtt', track: { mode: 'disabled' },
+        attached: true, remove() { this.attached = false; } };
+      this.captionAtLoad = [];
       this.fallback = { href: this.source.src };
     }
     get src() { return this._src || ''; }
     set src(value) { this._src = value; this.load(); }
+    append(element) { element.attached = true; }
     queue(name) {
       const event = () => this.emit(name); event.video = this; event.mediaType = name; mediaEvents.push(event);
     }
     querySelector(selector) { return { 'source': this.source, 'track': this.caption, '[data-film-fallback]': this.fallback }[selector] || null; }
     load() {
+      this.captionAtLoad.push(this.caption.attached);
       this.loads++; this.paused = true; this.ended = false; this.error = null; this.currentTime = 0;
       // A native load clears queued tasks from the old media resource.
       for (let n = mediaEvents.length - 1; n >= 0; n--) {
@@ -125,6 +135,25 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1, coarse
 
 const tests = [];
 function test(name, run) { tests.push({ name, run }); }
+
+for (const ios of [false, true]) test(`captions remain available without blocking ${ios ? 'iPhone' : 'desktop'} source loading`, async () => {
+  const f = fixture({ ios });
+  for (const video of f.videos) {
+    assert.deepEqual(video.captionAtLoad, [false]);
+    assert.equal(video.caption.attached, false);
+    assert.ok(video.caption.src.endsWith(`/${video.dataset.soundtrack}.vtt`));
+    video.emit('loadedmetadata');
+    assert.equal(video.caption.attached, true);
+    assert.equal(video.listeners.loadedmetadata.length, 0);
+    assert.equal(video.loads, 1);
+  }
+});
+test('a film already started before initialization keeps its captions and source', () => {
+  const f = fixture({ ios: true, alreadyPlaying: true });
+  assert.equal(f.videos[0].caption.attached, true);
+  assert.equal(f.videos[0].loads, 0);
+  assert.equal(f.videos[0].currentTime, 7);
+});
 
 test('audible playback is the first viewport attempt', async () => {
   const f = fixture(); f.enter(0); await f.flush();

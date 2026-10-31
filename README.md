@@ -54,7 +54,9 @@ On phones and tablets, playback is tap-to-play through native controls. No autop
 
 Desktop films retain scroll autoplay with an audible attempt and muted policy fallback, explicit mute/pause preferences, reduced-motion support, and fullscreen protection. Both paths choose a stable randomized song before enabling metadata preload, assign video.src directly without a second load(), and leave media already started before the deferred script untouched. A real media error exposes an Open video link to the same selected file. The wearer’s view is expanded by default.
 
-Run `node tests/film-playback.cjs` for the playback-controller regression checks, including randomized song assignment, resource/caption consistency, stale play promises, one-tap recovery from blocked autoplay, native mute/pause behavior, reduced motion, and fullscreen/picture-in-picture ownership. Media uses H.264 High L4.0, yuv420p, AAC-LC, and fast-start MP4; the live host supports HTTP byte ranges. Browser checks include an iPhone-width layout and Safari on the iOS 26.5 simulator; this is not a physical-device validation.
+External caption elements are detached while selecting the visit's video source and restored after `loadedmetadata`. On a physical iPhone 15 Pro Max running iOS 27.2, attaching the text track during source selection reproduced `MEDIA_ERR_SRC_NOT_SUPPORTED`; restoring it after metadata allowed one-tap playback. A video started before the deferred script arrives keeps its source, captions, and playback position untouched.
+
+Run `node tests/film-playback.cjs` for the playback-controller regression checks, including randomized song assignment, resource/caption consistency, caption initialization, stale play promises, one-tap recovery from blocked autoplay, native mute/pause behavior, reduced motion, and fullscreen/picture-in-picture ownership. Media uses H.264 High L4.0, yuv420p, AAC-LC, and fast-start MP4; the live host supports HTTP byte ranges. Browser checks include an iPhone-width layout, Safari on the iOS 26.5 simulator, and the physical iPhone startup comparison above.
 
 ## Link previews
 

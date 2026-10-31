@@ -30,7 +30,7 @@ Only public-facing approved artwork, screenshots, and final marketing films belo
 
 `media/images/` contains resized, progressively encoded JPEGs for responsive delivery (quality 85). `media/originals/` keeps the original four 3840 × 2160 screenshot JPEGs and the original 1672 × 941 illustration PNG available through each image link. Responsive exports are neither cropped nor color-adjusted. The text-free illustration is a new edited original; the earlier version remains in the private marketing workspace.
 
-The generated room backdrops are marketing staging, not environments included in Acapella. The concept films remain labeled. The separate illustration section intentionally contains only the text-free artwork, without a caption or explanatory copy, as requested.
+The generated room backdrops are marketing staging, not environments included in Acapella. The public page labels films by duration; accessible labels describe their animation and perspective. Production terminology stays in this documentation, not in visitor-facing copy. The separate illustration section intentionally contains only the text-free artwork, without a caption or explanatory copy, as requested.
 
 ### Film integration
 

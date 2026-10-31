@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '..', 'landing.js'), 'utf8');
 
-function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {}) {
+function fixture({ reduced = false, hash = '', autoplay = true, seed = 1, coarse = false, ios = false, ipad = false, alreadyPlaying = false } = {}) {
   const mediaEvents = [];
   class Target {
     constructor() { this.listeners = {}; }
@@ -24,12 +24,14 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
   class Video extends Target {
     constructor(id) {
       super(); Object.assign(this, { id, _muted: false, _volume: 1, paused: true,
-        ended: false, preload: 'metadata', error: null, webkitDisplayingFullscreen: false, webkitPresentationMode: 'inline', calls: [], plans: [], pending: [], loads: 0, currentTime: 0 });
+        ended: false, preload: 'none', played: { length: 0 }, soundWrites: [], error: null, webkitDisplayingFullscreen: false, webkitPresentationMode: 'inline', calls: [], plans: [], pending: [], loads: 0, currentTime: 0 });
       this.dataset = { perspective: id.startsWith('third') ? 'third' : 'first', soundtrack: 'mouth-made-symphony' };
       this.source = { src: `media/videos/soundtracks-v2/${this.dataset.perspective}-mouth-made-symphony.mp4` };
       this.caption = { src: 'media/videos/soundtracks-v2/mouth-made-symphony.vtt', track: { mode: 'disabled' } };
       this.fallback = { href: this.source.src };
     }
+    get src() { return this._src || ''; }
+    set src(value) { this._src = value; this.load(); }
     queue(name) {
       const event = () => this.emit(name); event.video = this; event.mediaType = name; mediaEvents.push(event);
     }
@@ -43,10 +45,12 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
     }
     get muted() { return this._muted; }
     set muted(value) {
+      this.soundWrites.push({ muted: value });
       if (this._muted !== value) { this._muted = value; this.queue('volumechange'); }
     }
     get volume() { return this._volume; }
     set volume(value) {
+      this.soundWrites.push({ volume: value });
       if (this._volume !== value) { this._volume = value; this.queue('volumechange'); }
     }
     closest() { return details.contains(this) ? details : null; }
@@ -69,6 +73,9 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
     }
   }
   const videos = [new Video('third-person-film'), new Video('first-person-film')];
+  if (alreadyPlaying) { videos[0].paused = false; videos[0].currentTime = 7; videos[0].played.length = 1; }
+  const recovery = [{ hidden: true }, { hidden: true }];
+  const directLinks = [{ href: '' }, { href: '' }];
   const buttons = [new Button(), new Button()];
   const playButtons = [new Button(), new Button()];
   const motion = new Target(); motion.matches = reduced;
@@ -77,7 +84,9 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
   const document = new Target(); document.hidden = false; document.body = { dataset: { autoplay: autoplay ? 'on' : 'off' } };
   document.querySelector = selector => selector === '.privacy-details' ? policy :
     buttons[videos.findIndex(video => selector === `.sound-toggle[aria-controls="${video.id}"]`)] ||
-    playButtons[videos.findIndex(video => selector === `.film-play[aria-controls="${video.id}"]`)];
+    playButtons[videos.findIndex(video => selector === `.film-play[aria-controls="${video.id}"]`)] ||
+    recovery[videos.findIndex(video => selector === `[data-film-recovery="${video.id}"]`)] ||
+    directLinks[videos.findIndex(video => selector === `[data-film-direct="${video.id}"]`)];
   document.querySelectorAll = selector => ({
     'video': videos, 'a[href="#privacy"]': [privacyLink], '.inside-view': [details]
   })[selector] || [];
@@ -88,16 +97,16 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
   }
   const window = new Target();
   window.location = { hash };
-  window.matchMedia = () => motion;
+  window.matchMedia = query => query.includes('prefers-reduced-motion') ? motion : { matches: coarse };
   window.IntersectionObserver = IntersectionObserver;
   const randomMath = Object.create(Math);
   randomMath.random = () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  vm.runInNewContext(source, { window, document, IntersectionObserver, Promise, Math: randomMath });
-  const enter = (index, ratio = .8) => notify([{ target: videos[index], isIntersecting: ratio > 0, intersectionRatio: ratio }]);
-  const switchTo = (from, to) => notify([
+  vm.runInNewContext(source, { window, document, IntersectionObserver, Promise, Math: randomMath, navigator: { userAgent: ios ? 'iPhone' : 'Macintosh', platform: 'MacIntel', maxTouchPoints: ipad ? 5 : 0 } });
+  const enter = (index, ratio = .8) => notify?.([{ target: videos[index], isIntersecting: ratio > 0, intersectionRatio: ratio }]);
+  const switchTo = (from, to) => notify?.([
     { target: videos[from], isIntersecting: false, intersectionRatio: 0 },
     { target: videos[to], isIntersecting: true, intersectionRatio: .8 }
   ]);
@@ -110,7 +119,7 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1 } = {})
   }
   const rejectPolicy = (index) => videos[index].pending.shift().reject(Object.assign(new Error('late policy'), { name: 'NotAllowedError' }));
   const soundOn = index => { videos[index].muted = true; buttons[index].emit('click'); };
-  return { videos, buttons, playButtons, enter, switchTo, flush, rejectPolicy, motion, document,
+  return { videos, buttons, playButtons, recovery, directLinks, observed: Boolean(notify), enter, switchTo, flush, rejectPolicy, motion, document,
     details, window, policy, privacyLink, soundOn };
 }
 
@@ -380,6 +389,60 @@ test('fullscreen-to-PiP handoff does not pause between Safari presentation event
   f.videos[0].webkitDisplayingFullscreen = false; f.videos[0].emit('webkitendfullscreen');
   f.videos[0].emit('webkitpresentationmodechanged'); await f.flush();
   assert.equal(f.videos[0].paused, false);
+});
+
+for (const [device, options] of [['touch phone', { coarse: true }], ['iPhone with fine pointer', { ios: true }], ['iPad desktop identity', { ipad: true }]]) {
+  test(`${device} uses native playback without custom controls or automatic play`, async () => {
+    const f = fixture(options); f.enter(0); f.document.emit('visibilitychange'); await f.flush();
+    assert.equal(f.document.body.dataset.player, 'native'); assert.equal(f.observed, false);
+    f.videos.forEach(v => { assert.equal(v.calls.length, 0); assert.equal(v.soundWrites.length, 0); });
+    assert(f.playButtons.every(b => b.hidden)); assert(f.buttons.every(b => b.hidden));
+  });
+}
+test('native playback survives visibility, scrolling, and fullscreen event ordering', async () => {
+  const f = fixture({ ios: true }); await f.videos[0].play(); await f.flush();
+  f.videos[0].currentTime = 12;
+  f.enter(0, 0); f.document.hidden = true; f.document.emit('visibilitychange');
+  f.videos[0].emit('webkitbeginfullscreen'); f.videos[0].emit('webkitendfullscreen');
+  f.document.emit('fullscreenchange'); await f.flush();
+  assert.equal(f.videos[0].paused, false); assert.equal(f.videos[0].currentTime, 12);
+  assert.equal(f.videos[0].calls.length, 1);
+});
+test('native manual pause never triggers an automatic restart', async () => {
+  const f = fixture({ ios: true }); await f.videos[0].play(); await f.flush();
+  f.videos[0].pause(); await f.flush(); f.enter(0); f.document.emit('visibilitychange'); f.motion.emit('change'); await f.flush();
+  assert.equal(f.videos[0].paused, true); assert.equal(f.videos[0].calls.length, 1);
+});
+test('native play stops only the previously playing film and preserves native mute', async () => {
+  const f = fixture({ ios: true }); await f.videos[0].play(); await f.flush();
+  f.videos[0].muted = true; await f.flush(); await f.videos[1].play(); await f.flush();
+  assert.equal(f.videos[0].paused, true); assert.equal(f.videos[1].paused, false);
+  assert.equal(f.videos[0].muted, true); assert.equal(f.videos[1].muted, false);
+  assert.equal(f.videos[0].soundWrites.length, 1); assert.equal(f.videos[1].soundWrites.length, 0);
+});
+test('native source assignment never interrupts a play started before the script arrives', async () => {
+  const f = fixture({ ios: true, alreadyPlaying: true }); await f.flush();
+  assert.equal(f.videos[0].loads, 0); assert.equal(f.videos[0].currentTime, 7);
+  assert.equal(f.videos[0].paused, false); assert.equal(f.videos[0].dataset.soundtrack, 'mouth-made-symphony');
+});
+test('native songs, captions and direct links stay fixed across replay and scrolling', async () => {
+  const f = fixture({ ios: true });
+  const sources = f.videos.map(v => v.src);
+  assert.notEqual(f.videos[0].dataset.soundtrack, f.videos[1].dataset.soundtrack);
+  f.videos.forEach((v, i) => { assert.equal(v.src, v.source.src); assert.equal(f.directLinks[i].href, v.src); });
+  await f.videos[0].play(); await f.flush(); f.videos[0].pause(); await f.flush();
+  f.enter(0, 0); f.enter(0); await f.videos[0].play(); await f.flush();
+  assert.deepEqual(f.videos.map(v => v.src), sources); assert(f.videos.every(v => v.loads === 1));
+});
+test('a native media error exposes the selected file as a direct fallback', async () => {
+  const f = fixture({ ios: true }); f.videos[0].error = { code: 2 }; f.videos[0].emit('error');
+  assert.equal(f.recovery[0].hidden, false); assert.equal(f.directLinks[0].href, f.videos[0].src);
+  f.videos[0].error = null; f.videos[0].emit('playing'); assert.equal(f.recovery[0].hidden, true);
+});
+test('closing the native perspective explicitly pauses its video', async () => {
+  const f = fixture({ ios: true }); await f.videos[1].play(); await f.flush();
+  f.details.open = false; f.details.emit('toggle'); await f.flush();
+  assert.equal(f.videos[1].paused, true);
 });
 
 (async () => {

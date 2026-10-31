@@ -10,7 +10,12 @@ document.querySelectorAll('a[href="#privacy"]').forEach(link => {
   link.addEventListener('click', () => { if (policy) policy.open = true; });
 });
 
+(() => {
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const nativePlayback = window.matchMedia('(any-pointer: coarse)').matches ||
+  /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+document.body.dataset.player = nativePlayback ? 'native' : 'enhanced';
 const automaticPlaybackEnabled = document.body.dataset.autoplay !== 'off';
 const filmRoot = document.body.dataset.filmRoot || 'media/videos/soundtracks-v2';
 const soundtracks = [
@@ -29,6 +34,8 @@ const filmStates = Array.from(document.querySelectorAll('video')).map(video => (
   video,
   button: document.querySelector(`.sound-toggle[aria-controls="${video.id}"]`),
   playButton: document.querySelector(`.film-play[aria-controls="${video.id}"]`),
+  recovery: document.querySelector(`[data-film-recovery="${video.id}"]`),
+  directLink: document.querySelector(`[data-film-direct="${video.id}"]`),
   source: video.querySelector('source'),
   caption: video.querySelector('track'),
   perspective: video.dataset.perspective,
@@ -182,19 +189,51 @@ function playVisibleFilm() {
   startFilm(candidate, 'auto');
 }
 
-// Choose resources before playback listeners are attached. load() resets the
-// default HTML source without starting playback or changing sound preferences.
+// HTML starts with preload=none. Choose one URL before asking for metadata;
+// assigning video.src performs resource selection without a second load().
+// A visitor may tap native Play before this deferred script arrives: leave
+// that video alone, including its source and playback position.
 filmStates.forEach((state, index) => {
-  const soundtrack = soundtracks[index % soundtracks.length];
-  if (state.soundtrack === soundtrack) return;
-  state.soundtrack = soundtrack;
-  state.video.dataset.soundtrack = soundtrack;
-  state.source.src = `${filmRoot}/${state.perspective}-${soundtrack}.mp4`;
-  if (state.caption) state.caption.src = `${filmRoot}/${soundtrack}.vtt`;
+  const video = state.video;
+  if (video.paused && video.currentTime === 0 && !video.played.length) {
+    const soundtrack = soundtracks[index % soundtracks.length];
+    state.soundtrack = soundtrack;
+    video.dataset.soundtrack = soundtrack;
+    state.source.src = `${filmRoot}/${state.perspective}-${soundtrack}.mp4`;
+    video.src = state.source.src;
+    if (state.caption) state.caption.src = `${filmRoot}/${soundtrack}.vtt`;
+  }
   const fallback = state.video.querySelector('[data-film-fallback]');
   if (fallback) fallback.href = state.source.src;
-  state.video.load();
+  if (state.directLink) state.directLink.href = video.src || video.currentSrc || state.source.src;
+  video.preload = 'metadata';
+  const syncRecovery = () => { if (state.recovery) state.recovery.hidden = !video.error; };
+  video.addEventListener('error', syncRecovery);
+  video.addEventListener('playing', syncRecovery);
+  syncRecovery();
 });
+
+if (nativePlayback) {
+  // On phones and tablets, Safari owns Play, sound, seeking, fullscreen and
+  // background behavior. No autoplay attempts, overlays, mute writes, or
+  // scroll/visibility listeners can interrupt a native user action.
+  filmStates.forEach(({ video }) => {
+    video.addEventListener('play', () => {
+      if (video.paused) return;
+      filmStates.forEach(other => {
+        if (other.video !== video && !other.video.paused) other.video.pause();
+      });
+    });
+  });
+  document.querySelectorAll('.inside-view').forEach(details => {
+    details.addEventListener('toggle', () => {
+      if (!details.open) filmStates.forEach(({ video }) => {
+        if (details.contains(video) && !video.paused) video.pause();
+      });
+    });
+  });
+  return;
+}
 
 filmStates.forEach(state => {
   const video = state.video;
@@ -329,3 +368,4 @@ document.querySelectorAll('.inside-view').forEach(details => {
     });
   });
 });
+})();

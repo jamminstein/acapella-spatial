@@ -34,9 +34,9 @@ The generated room backdrops are marketing staging, not environments included in
 
 ### App icon
 
-The hero uses the three original production PNGs from the app’s `Assets.xcassets/AppIcon.solidimagestack`, copied unchanged into `media/icon/`. They show two terracotta singing faces on ivory; the separate isometric singer study is not used.
+The hero uses the approved isometric singer icon from the October 31 study: an adult singer with peach, mint, lavender and yellow waveforms on ivory. Its three exported PNG layers are copied unchanged into `media/icon/isometric-v1/` and into the native app’s `Assets.xcassets/AppIcon.solidimagestack`. Versioned website paths avoid retaining the previous terracotta icon in browser caches.
 
-`icon.js` and the `.icon-showcase` styles provide a website approximation of layered depth: a circular back, two raised artwork planes, a soft highlight, pointer tilt, subtle scroll movement, and a brief turn on tap or keyboard activation. The gesture never captures touch scrolling or requests motion-sensor access. It settles after interaction, stops while offscreen or hidden, and becomes static with Reduce Motion or without JavaScript. This does not alter the native app icon or its submitted build.
+`icon.js` and the `.icon-showcase` styles provide a website approximation of layered depth: a circular back, two raised artwork planes, a soft highlight, pointer tilt, subtle scroll movement, and a brief turn on tap or keyboard activation. The gesture never captures touch scrolling or requests motion-sensor access. It settles after interaction, stops while offscreen or hidden, and becomes static with Reduce Motion or without JavaScript. The website adds motion to the same artwork used by the native app; Apple supplies the native icon’s lighting and depth.
 
 ### Film integration
 

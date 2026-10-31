@@ -5,12 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f2eb">
   <meta name="description" content="Sing into the air. Acapella is a spatial vocal looper for Apple Vision Pro. Start with a hum. Add another. See where it goes.">
-  <meta property="og:title" content="Acapella — Sing into the air.">
-  <meta property="og:description" content="Start with a hum. Add another. See where it goes. Coming to Apple Vision Pro.">
+  <meta property="og:title" content="Acapella ( ˘o˘ )♪ Sing into the air.">
+  <meta property="og:description" content="Start with a hum. Build a little world of sound around you on Apple Vision Pro.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://jamminstein.github.io/acapella-spatial/">
-  <meta property="og:image" content="https://jamminstein.github.io/acapella-spatial/media/images/small-studio-play-1600.jpg">
-  <title>Acapella — Sing into the air.</title>
+  <meta property="og:site_name" content="Acapella">
+  <meta property="og:image" content="https://jamminstein.github.io/acapella-spatial/media/images/spatial-voice-concept-text-free-1672.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1672">
+  <meta property="og:image:height" content="941">
+  <meta property="og:image:alt" content="An adult singing in Apple Vision Pro, surrounded by peach, mint, lavender and yellow vocal waveforms.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Acapella ( ˘o˘ )♪ Sing into the air.">
+  <meta name="twitter:description" content="Start with a hum. Build a little world of sound around you on Apple Vision Pro.">
+  <meta name="twitter:image" content="https://jamminstein.github.io/acapella-spatial/media/images/spatial-voice-concept-text-free-1672.jpg">
+  <meta name="twitter:image:alt" content="An adult singing in Apple Vision Pro, surrounded by peach, mint, lavender and yellow vocal waveforms.">
+  <title>Acapella ( ˘o˘ )♪ Sing into the air.</title>
   <link rel="canonical" href="https://jamminstein.github.io/acapella-spatial/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/AcapellaAir.woff2" as="font" type="font/woff2" crossorigin>
@@ -41,7 +51,7 @@
     <section class="featured-film shell section-space" id="films" aria-labelledby="films-title">
       <div class="film-heading"><h2 id="films-title">Watch it come together.</h2><span>Concept film · 36 seconds</span></div>
       <figure class="film">
-        <video id="third-person-film" controls muted playsinline preload="none" poster="media/videos/third-person-poster.jpg" aria-label="Third-person spatial voice concept film" aria-describedby="third-film-caption">
+        <video id="third-person-film" controls playsinline preload="none" poster="media/videos/third-person-poster.jpg" aria-label="Third-person spatial voice concept film" aria-describedby="third-film-caption">
           <source src="media/videos/third-person-concept.mp4" type="video/mp4">
           <track kind="captions" src="media/videos/soundtrack-captions.vtt" srclang="en" label="English sound descriptions">
           Your browser does not support embedded video. <a href="media/videos/third-person-concept.mp4">Open the third-person concept film</a>.
@@ -74,9 +84,7 @@
             <img src="media/images/grand-studio-editor-1600.jpg" srcset="media/images/grand-studio-editor-800.jpg 800w, media/images/grand-studio-editor-1600.jpg 1600w, media/images/grand-studio-editor-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" loading="lazy" alt="Acapella's full studio beside a loop editor with pitch, stretch, volume, reverb, and envelope controls, staged in a large recording studio.">
             <span class="image-action" aria-hidden="true">View full image ↗</span>
           </a>
-          <figcaption>Studio. A closer look at each loop.</figcaption>
         </figure>
-        <p class="quiet-note">Live performance tools are off until you choose them, and switch off when you return to a simpler view.</p>
       </div>
     </section>
 
@@ -93,29 +101,26 @@
       </div>
     </section>
 
-    <section class="inside-section shell section-space" aria-label="Another perspective">
-      <details class="inside-view">
-        <summary><span>See it from inside</span><span class="inside-meta">Wearer’s view · 36 seconds <b aria-hidden="true">+</b></span></summary>
+    <section class="inside-section shell section-space" id="perspective" aria-label="Another perspective">
+      <details class="inside-view" open>
+        <summary><span>User’s perspective</span><span class="inside-meta">Concept film · 36 seconds <b aria-hidden="true">+</b></span></summary>
         <figure class="film">
-          <video id="first-person-film" controls muted playsinline preload="none" poster="media/videos/first-person-poster.jpg" aria-label="First-person spatial voice concept film" aria-describedby="first-film-caption">
+          <video id="first-person-film" controls playsinline preload="none" poster="media/videos/first-person-poster.jpg" aria-label="First-person spatial voice concept film">
             <source src="media/videos/first-person-concept.mp4" type="video/mp4">
             <track kind="captions" src="media/videos/soundtrack-captions.vtt" srclang="en" label="English sound descriptions">
             Your browser does not support embedded video. <a href="media/videos/first-person-concept.mp4">Open the first-person concept film</a>.
           </video>
-          <figcaption class="film-under"><span id="first-film-caption">The same concept arrangement, from the wearer’s perspective.</span><button class="sound-toggle" type="button" aria-controls="first-person-film" aria-pressed="false"><span aria-hidden="true">♪</span> <span data-sound-label>Sound on</span></button></figcaption>
+          <figcaption class="film-under sound-only"><button class="sound-toggle" type="button" aria-controls="first-person-film" aria-pressed="false"><span aria-hidden="true">♪</span> <span data-sound-label>Sound on</span></button></figcaption>
         </figure>
       </details>
     </section>
 
-    <section class="concept-section shell section-space" aria-label="The idea illustrated">
+    <section class="concept-section shell section-space" id="illustration" aria-label="The idea illustrated">
       <figure>
-        <a class="image-link" href="media/originals/spatial-voice-concept.png" aria-label="View the full concept illustration">
-          <img src="media/images/spatial-voice-concept-1672.jpg" srcset="media/images/spatial-voice-concept-800.jpg 800w, media/images/spatial-voice-concept-1672.jpg 1672w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="1672" height="941" loading="lazy" alt="Concept illustration of an adult singing while wearing Apple Vision Pro, surrounded by peach, mint, lavender, and yellow vocal layers. Text reads: Sing into the air. Make a symphony of your own voice.">
-          <span class="image-action" aria-hidden="true">View full image ↗</span>
+        <a class="image-link" href="media/originals/spatial-voice-concept-text-free.png" aria-label="View the full concept illustration">
+          <img src="media/images/spatial-voice-concept-text-free-1672.jpg" srcset="media/images/spatial-voice-concept-text-free-800.jpg 800w, media/images/spatial-voice-concept-text-free-1672.jpg 1672w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="1672" height="941" loading="lazy" alt="Concept illustration of an adult singing while wearing Apple Vision Pro, surrounded by peach, mint, lavender, and yellow vocal layers.">
         </a>
-        <figcaption>The idea, illustrated.</figcaption>
       </figure>
-      <p class="media-note">The room images show native Acapella UI captured in the visionOS Simulator with AI-generated backdrops; these rooms aren’t included in the app. The illustration and films are concept artwork, not app recordings. The films contain layered vocals.</p>
     </section>
 
     <section class="closing-section shell section-space" aria-label="Privacy and contact">

@@ -34,14 +34,15 @@ The generated room backdrops are marketing staging, not environments included in
 
 ### Film integration
 
-The landing page includes these 36-second, sixteen-layer sequential concept films:
+The two 36-second concept films share four soundtrack choices: **Mouth-Made Symphony** (default), **Breath and Clicks 2**, **Breath and Clicks**, and **Clicks in Cheek**. The owner supplied all four recordings. Each pastel button starts that perspective with the chosen music; the other perspective adopts the same selection. Native video controls remain available. The full-track link opens the complete selected recording and pauses the films.
 
-- `media/videos/first-person-concept.mp4`
-- `media/videos/third-person-mouth-made-symphony.mp4`
-- `media/videos/first-person-poster.jpg`
-- `media/videos/third-person-poster.jpg`
+`media/videos/soundtracks-v2/` contains eight H.264/AAC variants, named `{third,first}-{track-id}.mp4`, plus one VTT sound-description track per song. `media/audio/soundtracks-v2/` contains the four complete recordings converted from Opus to AAC for browser compatibility. Each film uses 0:00–0:36 of its selected track with a 0.75-second ending fade. No volume adjustment was needed. Every variant preserves the original 1920 × 1080, 24 fps video stream: all 864 packets and their timestamps were checked, and every complete file decoded successfully. The earlier website movie files and their original audio have been removed from this repository; immutable source films remain in the private workspace. Versioned URLs avoid reusing cached copies.
 
-Both final H.264/AAC films are 1920 × 1080 at 24 fps, with 864 frames and clean full-file decode checks. The third-person film uses the approved adult illustration as its character texture. Sixteen waveforms appear individually. The first (third-person) film uses 0:00–0:36 of the owner-supplied “Mouth-Made Symphony”, with a 0.75-second fade at the end and no volume change. Its H.264 video stream is copied without re-encoding; all 864 video packets and timestamps match the original. The new filename avoids reusing a cached copy of the previous soundtrack; the original third-person file remains unchanged. The second film, User’s perspective, keeps its original soundtrack from the developer’s owned backing-vocal recording, with repeated layers of that same performance. These are concept films, not App Store app previews or app recordings. Native video controls remain available. Films attempt audible playback when they enter the viewport and fall back to muted playback if the browser blocks sound. Explicit sound preferences carry between films for the current visit. Films pause when they leave, and only one can play at a time. The wearer’s view is expanded by default. Reduced-motion preferences disable automatic playback; manual pauses remain respected while the film stays in view. Metadata loads when a film comes into view. `third-person-soundtrack.vtt` identifies the new music and ending fade; `soundtrack-captions.vtt` retains the original layered-vocal sound description for User’s perspective.
+These are concept films, not App Store previews or app recordings. The third-person film uses the approved adult illustration as its character texture; sixteen waveforms appear individually. Both perspectives now use only the four supplied songs. The App Store previews and built-in demo recordings are separate and unchanged.
+
+Films attempt audible playback when they enter the viewport and fall back to muted playback if the browser blocks sound. Explicit mute/volume preferences carry between films for the current visit. Films pause when they leave, and only one can play at a time. The wearer’s view is expanded by default. Reduced-motion preferences disable automatic playback; manual pauses remain respected until explicit playback. Metadata loads when a film comes into view. Selecting a different song restarts the selected film; selecting the current song resumes it.
+
+Run `node tests/film-playback.cjs` for the playback-controller regression checks, including shared choices, stale play promises, native mute/pause behavior, policy fallback, reduced motion and full-track links.
 
 ## Link previews
 

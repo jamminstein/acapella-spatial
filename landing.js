@@ -11,9 +11,23 @@ document.querySelectorAll('a[href="#privacy"]').forEach(link => {
 });
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const automaticPlaybackEnabled = document.body.dataset.autoplay !== 'off';
+const filmRoot = document.body.dataset.filmRoot || 'media/videos/soundtracks-v2';
+const fullTrackRoot = document.body.dataset.fullTrackRoot || 'media/audio/soundtracks-v2';
+const soundtracks = [
+  { id: 'mouth-made-symphony', title: 'Mouth-Made Symphony' },
+  { id: 'breath-and-clicks-2', title: 'Breath and Clicks 2' },
+  { id: 'breath-and-clicks', title: 'Breath and Clicks' },
+  { id: 'clicks-in-cheek', title: 'Clicks in Cheek' }
+];
+let selectedSoundtrack = soundtracks[0].id;
 const filmStates = Array.from(document.querySelectorAll('video')).map(video => ({
   video,
-  button: document.querySelector(`[aria-controls="${video.id}"]`),
+  button: document.querySelector(`.sound-toggle[aria-controls="${video.id}"]`),
+  source: video.querySelector('source'),
+  caption: video.querySelector('track'),
+  perspective: video.dataset.perspective,
+  soundtrack: video.dataset.soundtrack || selectedSoundtrack,
   visible: false,
   ratio: 0,
   userPaused: false,
@@ -21,6 +35,7 @@ const filmStates = Array.from(document.querySelectorAll('video')).map(video => (
   starting: false,
   ignoredPauses: 0,
   playKind: null,
+  wasUnpaused: false,
   request: 0,
   soundSnapshot: { muted: video.muted, volume: video.volume }
 }));
@@ -84,6 +99,7 @@ function startFilm(state, kind) {
   if (kind === 'manual') state.userPaused = false;
   state.autoBlocked = false;
   state.starting = true;
+  state.wasUnpaused = false;
   state.playKind = kind;
   activeFilm = state;
   const request = ++state.request;
@@ -113,6 +129,7 @@ function startFilm(state, kind) {
       // Keep this call synchronous with Sound on / Watch clicks so browsers
       // can grant their normal user-activation permission for audible playback.
       const started = state.video.play();
+      state.wasUnpaused = !state.video.paused;
       Promise.resolve(started).then(() => {
         if (!isCurrent()) return;
         state.starting = false;
@@ -126,7 +143,7 @@ function startFilm(state, kind) {
 }
 
 function playVisibleFilm() {
-  if (reducedMotion.matches || document.hidden) return;
+  if (!automaticPlaybackEnabled || reducedMotion.matches || document.hidden) return;
   // An explicit Watch click may start while its anchor is scrolling into view.
   // Intersection/visibility events still cancel it when the film leaves view.
   if (activeFilm && (activeFilm.starting || !activeFilm.video.paused) &&
@@ -156,6 +173,7 @@ filmStates.forEach(state => {
     }
     if (!state.playKind) state.request += 1;
     state.playKind = kind;
+    state.wasUnpaused = true;
     state.userPaused = false;
     state.autoBlocked = false;
     filmStates.forEach(other => { if (other !== state) pauseFilm(other); });
@@ -190,6 +208,69 @@ filmStates.forEach(state => {
     });
   }
 });
+
+function updateSoundtrackControls() {
+  const track = soundtracks.find(item => item.id === selectedSoundtrack);
+  document.querySelectorAll('.soundtrack-button').forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.soundtrack === selectedSoundtrack));
+  });
+  document.querySelectorAll('[data-full-track]').forEach(link => {
+    link.href = `${fullTrackRoot}/${selectedSoundtrack}.m4a`;
+    link.setAttribute('aria-label', `Listen to the full ${track.title} track`);
+  });
+}
+
+function replaceSoundtrack(state, id) {
+  if (state.soundtrack === id) return;
+  pauseFilm(state);
+  state.soundtrack = id;
+  state.video.dataset.soundtrack = id;
+  const captionMode = state.caption && state.caption.track && state.caption.track.mode;
+  state.source.src = `${filmRoot}/${state.perspective}-${id}.mp4`;
+  if (state.caption) state.caption.src = `${filmRoot}/${id}.vtt`;
+  const fallback = state.video.querySelector('[data-film-fallback]');
+  if (fallback) fallback.href = state.source.src;
+  // load() aborts old resource requests and clears their queued media events.
+  // Reset only our consumed-pause accounting; preserve an explicit user pause.
+  state.video.load();
+  state.ignoredPauses = 0;
+  state.autoBlocked = false;
+  if (captionMode && state.caption.track) state.caption.track.mode = captionMode;
+}
+
+function chooseSoundtrack(state, id) {
+  if (!soundtracks.some(track => track.id === id)) return;
+  filmStates.forEach(film => {
+    rememberNativeSound(film);
+    // load() discards queued native pause events. Preserve a pause already
+    // visible on a playing film before replacing either media resource.
+    // Blocked play requests and our own pending pauses are not user pauses.
+    if (film.playKind && film.wasUnpaused && film.video.paused &&
+        !film.video.ended && film.ignoredPauses === 0) film.userPaused = true;
+  });
+  selectedSoundtrack = id;
+  filmStates.forEach(film => replaceSoundtrack(film, id));
+  updateSoundtrackControls();
+  // A choice is an explicit play action. Keep play() in the click stack, and
+  // keep the user's mute/volume preference while changing the muxed resource.
+  startFilm(state, 'manual');
+}
+
+document.querySelectorAll('.soundtrack-button').forEach(button => {
+  button.addEventListener('click', () => {
+    const state = filmStates.find(film => film.video.id === button.getAttribute('aria-controls'));
+    if (state) chooseSoundtrack(state, button.dataset.soundtrack);
+  });
+});
+document.querySelectorAll('[data-full-track]').forEach(link => {
+  link.addEventListener('click', () => {
+    filmStates.forEach(state => {
+      pauseFilm(state);
+      state.userPaused = true;
+    });
+  });
+});
+updateSoundtrackControls();
 
 // This dedicated film action can request sound; unrelated page clicks cannot.
 document.querySelectorAll('.actions a[href="#films"]').forEach(link => {

@@ -15,7 +15,6 @@
   let ahemLoad;
   let ahemVoice;
   let ahemTicket = 0;
-  let hoverTimer;
   let lastAhem = -Infinity;
 
   const filmAudible = () => [...document.querySelectorAll('video')]
@@ -123,7 +122,6 @@
 
   function quietAhem() {
     ahemTicket += 1;
-    clearTimeout(hoverTimer);
     if (!ahemVoice) return;
     const { source, envelope, logo } = ahemVoice;
     ahemVoice = null;
@@ -150,7 +148,6 @@
   }
 
   function requestAhem(logo) {
-    clearTimeout(hoverTimer);
     if (document.hidden || filmAudible() || ahemVoice || performance.now() - lastAhem < 4000) return;
     const ticket = ++ahemTicket;
     const requested = performance.now();
@@ -205,11 +202,8 @@
   logos.forEach(logo => {
     logo.addEventListener('pointerenter', event => {
       if (event.pointerType === 'touch') return;
-      clearTimeout(hoverTimer);
-      hoverTimer = setTimeout(() => requestAhem(logo), 140);
+      requestAhem(logo);
     });
-    logo.addEventListener('pointerleave', quietAhem);
-    logo.addEventListener('blur', quietAhem);
     logo.addEventListener('click', () => requestAhem(logo));
   });
   function quiet() { requests.clear(); buttons.forEach(stop); quietAhem(); }

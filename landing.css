@@ -74,6 +74,7 @@ img { display: block; width: 100%; height: auto; }
 .image-link { display: block; position: relative; overflow: hidden; border-radius: 5px; background: #e9e5dc; }
 figcaption { padding-top: 14px; font-size: .78rem; line-height: 1.5; color: var(--muted); }
 .start-section, .featured-film, .studio-section { position: relative; isolation: isolate; }
+.start-section { padding-bottom: 1rem; }
 .margin-note { position: absolute; z-index: 2; width: fit-content; max-width: calc(100% - 36px); margin: 0; padding: 0; color: var(--muted); font-family: var(--display); font-size: clamp(.8125rem, 1vw, .9375rem); line-height: 1.4; transform: translate3d(0, var(--note-drift, 0px), 0) rotate(var(--note-tilt, 0deg)); pointer-events: none; }
 .start-section .margin-note { right: 11%; bottom: -2rem; --note-tilt: -5deg; }
 .featured-film > .margin-note { left: 9%; bottom: -2rem; --note-tilt: 4deg; }

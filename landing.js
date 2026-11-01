@@ -195,6 +195,7 @@ function playVisibleFilm() {
 // that video alone, including its source and playback position.
 filmStates.forEach((state, index) => {
   const video = state.video;
+  const mediaRoot = video.dataset.filmRoot || filmRoot;
   if (video.paused && video.currentTime === 0 && !video.played.length) {
     const soundtrack = soundtracks[index % soundtracks.length];
     state.soundtrack = soundtrack;
@@ -203,10 +204,10 @@ filmStates.forEach((state, index) => {
     // attached during source selection. Restore captions after metadata loads.
     if (state.caption) {
       state.caption.remove();
-      state.caption.src = `${filmRoot}/${soundtrack}.vtt`;
+      state.caption.src = `${mediaRoot}/${soundtrack}.vtt`;
       video.addEventListener('loadedmetadata', () => video.append(state.caption), { once: true });
     }
-    state.source.src = `${filmRoot}/${state.perspective}-${soundtrack}.mp4`;
+    state.source.src = `${mediaRoot}/${state.perspective}-${soundtrack}.mp4`;
     video.src = state.source.src;
   }
   const fallback = state.video.querySelector('[data-film-fallback]');

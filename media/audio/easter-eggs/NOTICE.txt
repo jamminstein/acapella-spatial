@@ -1,0 +1,12 @@
+Acapella logo Easter egg
+
+ahem-v1.mp3 is the high-quality MP3 delivery version of "Ahem 1"
+by DrFortyseven, published August 4, 2018.
+Source: https://freesound.org/people/DrFortyseven/sounds/436107/
+Audio: https://cdn.freesound.org/previews/436/436107_729251-hq.mp3
+License: Creative Commons CC0 1.0 Universal (public-domain dedication)
+https://creativecommons.org/publicdomain/zero/1.0/
+Source and license verified November 1, 2026.
+
+The recording is unchanged. Playback adds a brief gain envelope, reduced
+level and the same limiter as the website's existing singing masks.

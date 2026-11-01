@@ -2,14 +2,24 @@
 
 (() => {
   const buttons = [...document.querySelectorAll('[data-mask]')];
+  const logos = [...document.querySelectorAll('.wordmark')];
   const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!buttons.length || !AudioContext) return;
+  if ((!buttons.length && !logos.length) || !AudioContext) return;
   let context;
   let master;
   let wave;
   let generation = 0;
   const voices = new Map();
   const requests = new Map();
+  let ahemBuffer;
+  let ahemLoad;
+  let ahemVoice;
+  let ahemTicket = 0;
+  let hoverTimer;
+  let lastAhem = -Infinity;
+
+  const filmAudible = () => [...document.querySelectorAll('video')]
+    .some(video => !video.paused && !video.ended && !video.muted && video.volume > 0);
 
   function audio() {
     if (context && context.state !== 'closed') return context;
@@ -96,18 +106,87 @@
   }
 
   function request(button) {
-    if (document.hidden || [...document.querySelectorAll('video')].some(v => !v.paused && !v.muted)) return;
+    if (document.hidden || filmAudible()) return;
+    quietAhem();
     const ticket = ++generation;
     requests.set(button, ticket);
     const started = performance.now();
     try {
       const ctx = audio();
       const play = () => {
-        if (ctx.state === 'running' && !document.hidden && requests.get(button) === ticket && performance.now() - started < 700) sing(button);
+        if (ctx.state === 'running' && !document.hidden && !filmAudible() && requests.get(button) === ticket && performance.now() - started < 700) sing(button);
       };
       if (ctx.state === 'running') play();
       else ctx.resume().then(play).catch(() => {});
     } catch (_) { /* The illustration remains usable if browser audio is unavailable. */ }
+  }
+
+  function quietAhem() {
+    ahemTicket += 1;
+    clearTimeout(hoverTimer);
+    if (!ahemVoice) return;
+    const { source, envelope, logo } = ahemVoice;
+    ahemVoice = null;
+    delete logo.dataset.clearing;
+    const now = context.currentTime;
+    envelope.gain.cancelScheduledValues(now);
+    envelope.gain.setTargetAtTime(0, now, .012);
+    try { source.stop(now + .05); } catch (_) {}
+  }
+
+  function loadAhem(ctx) {
+    if (ahemBuffer) return Promise.resolve(ahemBuffer);
+    if (!ahemLoad) {
+      ahemLoad = fetch('media/audio/easter-eggs/ahem-v1.mp3')
+        .then(response => {
+          if (!response.ok) throw new Error('Sound unavailable');
+          return response.arrayBuffer();
+        })
+        .then(bytes => ctx.decodeAudioData(bytes))
+        .then(buffer => { ahemBuffer = buffer; return buffer; })
+        .catch(error => { ahemLoad = null; throw error; });
+    }
+    return ahemLoad;
+  }
+
+  function requestAhem(logo) {
+    clearTimeout(hoverTimer);
+    if (document.hidden || filmAudible() || ahemVoice || performance.now() - lastAhem < 4000) return;
+    const ticket = ++ahemTicket;
+    const requested = performance.now();
+    try {
+      const ctx = audio();
+      // Resume inside the gesture. Never queue a blocked hover for a later click.
+      const resumed = ctx.state === 'running' ? Promise.resolve() : ctx.resume();
+      Promise.all([resumed, loadAhem(ctx)]).then(([, buffer]) => {
+        if (ticket !== ahemTicket || ctx.state !== 'running' || document.hidden ||
+            filmAudible() || performance.now() - requested > 700 || performance.now() - lastAhem < 4000) return;
+        requests.clear();
+        buttons.forEach(stop);
+        const now = ctx.currentTime;
+        const source = ctx.createBufferSource();
+        const envelope = ctx.createGain();
+        source.buffer = buffer;
+        // The shared master and limiter keep this little voice close and quiet.
+        envelope.gain.setValueAtTime(0, now);
+        envelope.gain.linearRampToValueAtTime(2, now + .008);
+        envelope.gain.setValueAtTime(2, now + buffer.duration - .025);
+        envelope.gain.linearRampToValueAtTime(0, now + buffer.duration);
+        source.connect(envelope).connect(master);
+        const voice = { source, envelope, logo };
+        ahemVoice = voice;
+        lastAhem = performance.now();
+        logo.dataset.clearing = 'true';
+        source.onended = () => {
+          source.disconnect(); envelope.disconnect();
+          if (ahemVoice === voice) {
+            ahemVoice = null;
+            delete logo.dataset.clearing;
+          }
+        };
+        source.start(now);
+      }).catch(() => {});
+    } catch (_) { /* The home link works even when browser audio is unavailable. */ }
   }
 
   // A normal page click unlocks later hover notes, without making any sound.
@@ -123,9 +202,22 @@
     button.addEventListener('click', () => request(button));
     button.addEventListener('blur', () => { requests.delete(button); stop(button); });
   });
-  function quiet() { requests.clear(); buttons.forEach(stop); }
+  logos.forEach(logo => {
+    logo.addEventListener('pointerenter', event => {
+      if (event.pointerType === 'touch') return;
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(() => requestAhem(logo), 140);
+    });
+    logo.addEventListener('pointerleave', quietAhem);
+    logo.addEventListener('blur', quietAhem);
+    logo.addEventListener('click', () => requestAhem(logo));
+  });
+  function quiet() { requests.clear(); buttons.forEach(stop); quietAhem(); }
   document.addEventListener('visibilitychange', () => { if (document.hidden) quiet(); });
   window.addEventListener('pagehide', quiet);
   window.addEventListener('keydown', event => { if (event.key === 'Escape') quiet(); });
-  document.querySelectorAll('video').forEach(video => video.addEventListener('play', quiet));
+  document.querySelectorAll('video').forEach(video => {
+    video.addEventListener('play', quiet);
+    video.addEventListener('volumechange', () => { if (filmAudible()) quiet(); });
+  });
 })();

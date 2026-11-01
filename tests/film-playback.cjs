@@ -32,7 +32,7 @@ function fixture({ reduced = false, hash = '', autoplay = true, seed = 1, coarse
       super(); Object.assign(this, { id, _muted: false, _volume: 1, paused: true,
         ended: false, preload: 'none', played: { length: 0 }, soundWrites: [], error: null, webkitDisplayingFullscreen: false, webkitPresentationMode: 'inline', calls: [], plans: [], pending: [], loads: 0, currentTime: 0 });
       this.dataset = { perspective: id.startsWith('third') ? 'third' : 'first', soundtrack: 'mouth-made-symphony' };
-      if (this.dataset.perspective === 'third') this.dataset.filmRoot = 'media/videos/woman-v1';
+      if (this.dataset.perspective === 'third') this.dataset.filmRoot = 'media/videos/woman-4k-v1';
       const mediaRoot = this.dataset.filmRoot || 'media/videos/soundtracks-v2';
       this.source = { src: `${mediaRoot}/${this.dataset.perspective}-mouth-made-symphony.mp4` };
       this.caption = { src: `${mediaRoot}/mouth-made-symphony.vtt`, track: { mode: 'disabled' },

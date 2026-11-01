@@ -12,6 +12,7 @@
   const voices = new Map();
   const requests = new Map();
   let ahemBuffer;
+  let ahemBytes;
   let ahemLoad;
   let ahemVoice;
   let ahemTicket = 0;
@@ -132,32 +133,47 @@
     try { source.stop(now + .05); } catch (_) {}
   }
 
-  function loadAhem(ctx) {
-    if (ahemBuffer) return Promise.resolve(ahemBuffer);
-    if (!ahemLoad) {
-      ahemLoad = fetch('media/audio/easter-eggs/ahem-v1.mp3')
+  function preloadAhem() {
+    if (!ahemBytes) {
+      ahemBytes = fetch('media/audio/easter-eggs/ahem-v1.mp3')
         .then(response => {
           if (!response.ok) throw new Error('Sound unavailable');
           return response.arrayBuffer();
         })
-        .then(bytes => ctx.decodeAudioData(bytes))
+        .catch(error => { ahemBytes = null; throw error; });
+    }
+    return ahemBytes;
+  }
+
+  function loadAhem(ctx) {
+    if (ahemBuffer) return Promise.resolve(ahemBuffer);
+    if (!ahemLoad) {
+      ahemLoad = preloadAhem()
+        .then(bytes => ctx.decodeAudioData(bytes.slice(0)))
         .then(buffer => { ahemBuffer = buffer; return buffer; })
         .catch(error => { ahemLoad = null; throw error; });
     }
     return ahemLoad;
   }
 
-  function requestAhem(logo) {
+  function requestAhem(logo, fromGesture = false) {
     if (document.hidden || filmAudible() || ahemVoice || performance.now() - lastAhem < 4000) return;
-    const ticket = ++ahemTicket;
-    const requested = performance.now();
     try {
       const ctx = audio();
-      // Resume inside the gesture. Never queue a blocked hover for a later click.
-      const resumed = ctx.state === 'running' ? Promise.resolve() : ctx.resume();
+      // A locked Safari hover must not become a queued sound on a later click.
+      if (ctx.state !== 'running' && !fromGesture) {
+        loadAhem(ctx).catch(() => {});
+        return;
+      }
+      const ticket = ++ahemTicket;
+      const requested = performance.now();
+      // Bound only a blocked unlock, not the first sound download or decode.
+      const resumed = ctx.state === 'running' ? Promise.resolve() : ctx.resume().then(() => {
+        if (performance.now() - requested > 700) throw new Error('Audio activation expired');
+      });
       Promise.all([resumed, loadAhem(ctx)]).then(([, buffer]) => {
         if (ticket !== ahemTicket || ctx.state !== 'running' || document.hidden ||
-            filmAudible() || performance.now() - requested > 700 || performance.now() - lastAhem < 4000) return;
+            filmAudible() || performance.now() - lastAhem < 4000) return;
         requests.clear();
         buttons.forEach(stop);
         const now = ctx.currentTime;
@@ -189,9 +205,16 @@
   // A normal page click unlocks later hover notes, without making any sound.
   // Safari can require the first note to be a tap/click on the mask itself.
   function arm() {
-    try { const ctx = audio(); if (ctx.state !== 'running') ctx.resume().catch(() => {}); } catch (_) {}
+    try {
+      const ctx = audio();
+      if (ctx.state !== 'running') ctx.resume().catch(() => {});
+      if (logos.length) loadAhem(ctx).catch(() => {});
+    } catch (_) {}
   }
-  document.addEventListener('pointerdown', arm, { once: true, passive: true });
+  // Retry after Safari/OS audio interruptions, including keyboard activation.
+  ['pointerdown', 'click', 'keydown'].forEach(event => document.addEventListener(event, arm, { passive: true }));
+  // Fetch the tiny recording ahead of the first hover, without opening audio.
+  if (logos.length) preloadAhem().catch(() => {});
   buttons.forEach(button => {
     button.disabled = false;
     button.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') request(button); });
@@ -204,7 +227,7 @@
       if (event.pointerType === 'touch') return;
       requestAhem(logo);
     });
-    logo.addEventListener('click', () => requestAhem(logo));
+    logo.addEventListener('click', () => requestAhem(logo, true));
   });
   function quiet() { requests.clear(); buttons.forEach(stop); quietAhem(); }
   document.addEventListener('visibilitychange', () => { if (document.hidden) quiet(); });

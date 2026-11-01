@@ -64,8 +64,8 @@ function syncSound(state) {
     const action = state.video.error ? 'Try again' : state.video.ended ? 'Replay' : 'Play';
     const label = state.playButton.querySelector('[data-play-label]');
     if (label) label.textContent = action;
-    const perspective = state.perspective === 'third' ? 'viewer’s' : 'user’s';
-    state.playButton.setAttribute('aria-label', `${action}, ${perspective} perspective video`);
+    const perspective = state.perspective === 'third' ? 'viewer’s perspective video' : 'video from inside the headset';
+    state.playButton.setAttribute('aria-label', `${action}, ${perspective}`);
   }
   if (!state.button) return;
   state.button.hidden = stopped;

@@ -73,8 +73,11 @@ img { display: block; width: 100%; height: auto; }
 .text-link span { display: inline-block; margin-left: .3rem; }
 .image-link { display: block; position: relative; overflow: hidden; border-radius: 5px; background: #e9e5dc; }
 figcaption { padding-top: 14px; font-size: .78rem; line-height: 1.5; color: var(--muted); }
+.margin-note { margin: 0; color: var(--orange); font-family: var(--display); font-size: clamp(1.2rem, 2vw, 1.6rem); line-height: 1.35; }
+figcaption.margin-note { padding-top: 16px; text-align: right; }
 .film-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .7rem 2rem; margin-bottom: 1.4rem; }
 .film-heading h2 { font-size: clamp(2.15rem,3.5vw,3.5rem); }
+.film-heading .margin-note { color: var(--muted); }
 .film-frame { position: relative; }
 body[data-player="native"] .film-play, body[data-player="native"] .film-under { display: none; }
 .film-recovery { margin: .5rem 0 0; }

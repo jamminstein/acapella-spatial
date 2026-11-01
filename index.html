@@ -26,7 +26,7 @@
   <link rel="icon" href="favicon.svg?v=20261031-wave" type="image/svg+xml" sizes="any">
   <link rel="preload" href="fonts/AcapellaAir.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="landing.css?v=20261031-wave">
-  <script src="landing.js?v=20261031-captions" defer></script>
+  <script src="landing.js?v=20261101-woman" defer></script>
   <script src="icon.js?v=20261031-icon" defer></script>
   <script src="masks.js?v=20261031-masks" defer></script>
 </head>
@@ -71,15 +71,15 @@
       <div class="film-heading"><h2 id="films-title">Watch it come together.</h2></div>
       <figure class="film">
         <div class="film-frame">
-          <video id="third-person-film" data-perspective="third" data-soundtrack="mouth-made-symphony" controls playsinline preload="none" poster="media/videos/third-person-poster.jpg" aria-label="Spatial singing animation, viewer’s perspective">
-            <source src="media/videos/soundtracks-v2/third-mouth-made-symphony.mp4" type="video/mp4">
-            <track kind="captions" src="media/videos/soundtracks-v2/mouth-made-symphony.vtt" srclang="en" label="English sound descriptions">
-            Your browser does not support embedded video. <a data-film-fallback href="media/videos/soundtracks-v2/third-mouth-made-symphony.mp4">Watch from the viewer’s perspective</a>.
+          <video id="third-person-film" data-perspective="third" data-film-root="media/videos/woman-v1" data-soundtrack="mouth-made-symphony" controls playsinline preload="none" poster="media/videos/woman-v1/poster.jpg" aria-label="Spatial singing animation, viewer’s perspective">
+            <source src="media/videos/woman-v1/third-mouth-made-symphony.mp4" type="video/mp4">
+            <track kind="captions" src="media/videos/woman-v1/mouth-made-symphony.vtt" srclang="en" label="English sound descriptions">
+            Your browser does not support embedded video. <a data-film-fallback href="media/videos/woman-v1/third-mouth-made-symphony.mp4">Watch from the viewer’s perspective</a>.
           </video>
           <button class="film-play" type="button" aria-controls="third-person-film" aria-label="Play, viewer’s perspective video" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 4.5v15l12-7.5z"/></svg><span data-play-label>Play</span></button>
         </div>
         <figcaption class="film-under sound-only"><button class="sound-toggle" type="button" aria-controls="third-person-film" aria-pressed="false" hidden><span aria-hidden="true">♪</span> <span data-sound-label>Sound on</span></button></figcaption>
-          <p class="film-recovery" data-film-recovery="third-person-film" hidden><a class="text-link" data-film-direct="third-person-film" href="media/videos/soundtracks-v2/third-mouth-made-symphony.mp4">Open video</a></p>
+          <p class="film-recovery" data-film-recovery="third-person-film" hidden><a class="text-link" data-film-direct="third-person-film" href="media/videos/woman-v1/third-mouth-made-symphony.mp4">Open video</a></p>
       </figure>
     </section>
 

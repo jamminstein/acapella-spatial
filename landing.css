@@ -40,6 +40,9 @@ img { display: block; width: 100%; height: auto; }
 .orange { color: var(--orange); }
 .status-dot { flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
 .wordmark { display: inline-flex; align-items: center; flex: 0 0 auto; width: 180px; min-height: 44px; text-decoration: none; }
+.wordmark[data-clearing="true"] img { animation: logo-ahem 490ms ease both; transform-origin: 50% 70%; }
+@keyframes logo-ahem { 0%, 100% { transform: none; } 24% { transform: translateY(1px) scaleY(.975); } 42% { transform: translateY(-1px); } 62% { transform: scaleY(.99); } }
+@media (prefers-reduced-motion: reduce) { .wordmark[data-clearing="true"] img { animation: none; } }
 .site-header { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--line); }
 .site-header nav, .site-footer nav { display: flex; flex-wrap: wrap; gap: 1.7rem; }
 .site-header nav a, .site-footer nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; font-size: .85rem; text-decoration: none; padding-block: .5rem; }

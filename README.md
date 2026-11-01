@@ -40,6 +40,8 @@ The hero uses the approved isometric singer icon from the October 31 study: an a
 
 The two terracotta masks from the earlier icon live near the footer as a small Easter egg. `masks.js` synthesizes a short low or high vowel glide on hover, click, or keyboard activation using local Web Audio oscillators and formant filters. Safari may need a first tap to unlock sound. Notes stop when leaving a mask, pressing Escape, hiding the page, or starting a film; they never play over an audible film. The pair uses the original transparent mask layers, respects Reduce Motion, and makes no microphone or network requests.
 
+The header and footer wordmarks share a second Easter egg: a soft, dry recorded “ahem,” with a tiny movement when it plays. Hovering briefly, tapping, or activating the home link with Enter can trigger it; ordinary link navigation is preserved. Both logos share a four-second cooldown. Leaving the logo, hiding the page, pressing Escape, playing a film or a mask cancels the sound and any pending request. A blocked or slow hover is never saved for later playback. Safari may need an initial click to allow hover audio. The half-second, 14 KB CC0 recording is self-hosted and fetched only on interaction; its provenance is in `media/audio/easter-eggs/NOTICE.txt`. No new visible labels or controls are added, and Reduce Motion disables the movement.
+
 ### Film integration
 
 Keep the short landing page free of hero navigation buttons and song pickers. Same-page anchor links use plain labels without arrows.

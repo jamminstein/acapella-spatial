@@ -1,6 +1,6 @@
 // One user-authorized media element plays the displayed presets in order.
 // Source changes stay synchronous with explicit Play; no canplay callback can
-// resurrect playback after a pause or a manual preset selection.
+// resurrect playback after a pause or supersede a newer preset selection.
 export function presetPlayback({ audio, modes, initialMode = modes[0], sourceForMode,
   unlock = () => Promise.resolve(), canPlay = () => true,
   onSelect = () => {}, onStateChange = () => {}, onStarted = () => {}, onMessage = () => {} }) {
@@ -63,11 +63,16 @@ export function presetPlayback({ audio, modes, initialMode = modes[0], sourceFor
   }
   function select(mode) {
     if (disposed || mode === selected || !modes.includes(mode)) return;
-    // Choosing a different sound is deliberate browsing, not consent to play it.
+    // Preserve the active cycle, including a pending start, but observe a
+    // native pause immediately even if its queued pause event has not arrived.
+    const nativePause = startedSource && audio.paused && !audio.ended;
+    const continuePlaying = wanted && !nativePause && canPlay();
     pause();
     changeSource(mode);
     onMessage('');
-    onStateChange();
+    // Keep the replacement play inside this click for Safari/iPhone permission.
+    if (continuePlaying) play();
+    else onStateChange();
   }
   const listeners = {
     play() {
@@ -85,7 +90,7 @@ export function presetPlayback({ audio, modes, initialMode = modes[0], sourceFor
     },
     ended() {
       // A duplicated/queued event from a previous source sees ended=false
-      // after load. Manual selection/pause also revoke wanted immediately.
+      // after load. Explicit pause also revokes wanted immediately.
       if (!audio.ended || !wanted || !startedSource) return;
       if (!canPlay()) { pause(); return; }
       const next = modes[(modes.indexOf(selected) + 1) % modes.length];

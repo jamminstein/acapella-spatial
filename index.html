@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="landing.css?v=20261101-coral-notes">
   <script src="notes.js?v=20261101-floating-notes" defer></script>
   <script src="landing.js?v=20261101-headset-copy" defer></script>
-  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-1">
-  <script type="module" src="waveform-loader.js?v=20261102-1"></script>
+  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-spatial-2">
+  <script type="module" src="waveform-loader.js?v=20261102-spatial-2"></script>
   <script src="icon.js?v=20261031-icon" defer></script>
   <script src="masks.js?v=20261101-ahem-ready" defer></script>
 </head>
@@ -106,14 +106,21 @@
     <section class="studio-section section-space" aria-labelledby="studio-title">
       <div class="shell">
         <div class="studio-heading"><h2 id="studio-title">Room to <br>experiment.</h2><div class="studio-intro"><p>Change the pitch, add reverb or delay, or try granular effects. See what sounds good to you.</p></div></div>
-        <section class="sound-playground" id="sound-playground" data-media-root="media/playground/v1" aria-labelledby="playground-title">
-          <div class="playground-heading"><h3 id="playground-title">Same voice. New tricks.</h3><p>One little phrase, seven ways.</p></div>
+        <figure>
+          <a class="image-link" href="media/originals/grand-studio-editor.jpg" aria-label="View the full-resolution studio and loop editor screenshot">
+            <img src="media/images/grand-studio-editor-1600.jpg" srcset="media/images/grand-studio-editor-800.jpg 800w, media/images/grand-studio-editor-1600.jpg 1600w, media/images/grand-studio-editor-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" loading="lazy" alt="Acapella's Studio controls and loop editor, with pitch, stretch, volume, reverb, and envelope controls, against a recording-studio backdrop.">
+
+          </a>
+          <figcaption class="margin-note">oh, that works!</figcaption>
+        </figure>
+        <section class="sound-playground" id="sound-playground" data-media-root="media/playground/v2" aria-label="Place a sound in space">
           <div class="waveform-stage">
-            <img class="waveform-fallback" src="media/playground/v1/plain.svg" width="1200" height="520" loading="lazy" alt="Plain voice waveform">
-            <canvas hidden tabindex="0" aria-label="Plain waveform. Drag to rotate freely, or use arrow keys. Home resets the view."></canvas>
-            <button type="button" class="waveform-reset" data-wave-reset hidden aria-label="Reset waveform view">↺</button>
-            <span class="waveform-drag-hint" hidden>drag to turn</span>
+            <img class="waveform-fallback" src="media/playground/v2/plain.svg" width="1200" height="520" loading="lazy" alt="Plain voice waveform">
+            <canvas hidden tabindex="0" aria-label="Plain waveform. Drag to place the sound. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center."></canvas>
+            <button type="button" class="waveform-reset" data-wave-reset hidden aria-label="Return ribbon to center">↺</button>
+            <span class="waveform-drag-hint" hidden>drag to place</span>
           </div>
+          <output class="waveform-sr-only" data-wave-position aria-live="polite"></output>
           <div class="waveform-modes" role="group" aria-label="Choose a sound" hidden>
             <button type="button" data-wave-mode="plain" aria-pressed="true" style="--mode-color:#b0714a">Plain</button>
             <button type="button" data-wave-mode="hum" aria-pressed="false" style="--mode-color:#1270b8">Hum</button>
@@ -125,18 +132,12 @@
           </div>
           <div class="waveform-listen-row">
             <button type="button" data-wave-play class="waveform-play" hidden><svg class="wave-play-icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.5v15l12-7.5z" fill="currentColor"/></svg><svg class="wave-pause-icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3h4v14H4zm8 0h4v14h-4z" fill="currentColor"/></svg><span>Listen</span></button>
-            <p data-wave-note>just your voice</p>
+            <p data-wave-note>just a little hum</p>
           </div>
-          <audio controls preload="none" src="media/playground/v1/plain.m4a" aria-label="Listen to the shared vocal phrase"><a href="media/playground/v1/plain.m4a">Listen to the phrase</a></audio>
+          <audio controls preload="none" src="media/playground/v2/plain.m4a" aria-label="Listen to the shared vocal phrase"><a href="media/playground/v2/plain.m4a">Listen to the phrase</a></audio>
+          <p class="waveform-headphones" hidden>try headphones</p>
           <p class="waveform-status" data-wave-status role="status"></p>
         </section>
-        <figure>
-          <a class="image-link" href="media/originals/grand-studio-editor.jpg" aria-label="View the full-resolution studio and loop editor screenshot">
-            <img src="media/images/grand-studio-editor-1600.jpg" srcset="media/images/grand-studio-editor-800.jpg 800w, media/images/grand-studio-editor-1600.jpg 1600w, media/images/grand-studio-editor-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" loading="lazy" alt="Acapella's Studio controls and loop editor, with pitch, stretch, volume, reverb, and envelope controls, against a recording-studio backdrop.">
-
-          </a>
-          <figcaption class="margin-note">oh, that works!</figcaption>
-        </figure>
       </div>
     </section>
 

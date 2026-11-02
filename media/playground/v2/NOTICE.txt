@@ -1,0 +1,13 @@
+Waveform playground voice
+
+"Casual Humming" by Topschool, October 9, 2018.
+Source: https://freesound.org/people/Topschool/sounds/442600/
+Audio: https://cdn.freesound.org/previews/442/442600_6590186-hq.mp3
+License: CC0 1.0 Universal
+https://creativecommons.org/publicdomain/zero/1.0/
+Source and license verified November 2, 2026.
+
+All seven examples use seconds 0.85–4.85 of the same recording, with short
+edge fades, effect tails, and matched listening levels. The plain version
+has no pitch correction, added accompaniment, denoising, or reverb.
+The processed examples use curated combinations of the app’s audio tools.

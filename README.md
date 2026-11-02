@@ -40,7 +40,11 @@ Drag up to move away, down to move closer, and sideways to reposition the sound.
 The ribbon turns toward the listener as it moves. There is no depth slider or
 camera orbit. Arrow keys do the same; Shift-drag or Shift-Up/Down changes height.
 Home / the reset button returns the sound to center. Switching modes retains
-placement. The pearl follows the ribbon through every transform.
+placement. The pearl follows the ribbon through every transform. The ribbon floats
+without a platform; a soft shadow follows its projected position across the effects
+area and scales in both dimensions with distance. Travel fits the viewport width,
+and the ribbon can approach more than twice its default apparent size. App mode
+hues are retained with softer saturation and neutral lighting for the web scene.
 
 A Web Audio HRTF panner places the sample at the displayed position, including
 distance attenuation. Headphones make this easier to hear; it is a fixed-listener

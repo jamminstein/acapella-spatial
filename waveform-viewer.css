@@ -12,9 +12,8 @@
 .waveform-stage canvas, .waveform-fallback { display: block; width: 100%; height: 100%; object-fit: contain; position: relative; }
 .waveform-stage canvas { cursor: grab; outline: none; touch-action: none; }
 .waveform-stage canvas.is-grabbing { cursor: grabbing; }
-.waveform-stage canvas:focus-visible { outline: 2px solid var(--orange); outline-offset: -4px; border-radius: 12px; }
+.waveform-stage canvas:focus-visible:not(.is-pointer-focused) { outline: 2px solid var(--orange); outline-offset: -4px; border-radius: 12px; }
 .waveform-reset { position: absolute; top: 6px; right: 12px; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: rgba(255,255,255,.45); color: var(--ink); font-size: 1.6rem; cursor: pointer; }
-.waveform-drag-hint { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%) rotate(-3deg); font-family: var(--display); color: var(--muted); font-size: 1.25rem; pointer-events: none; white-space: nowrap; }
 .waveform-modes { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 18px 12px 0; }
 .waveform-modes button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 17px; border: 1px solid transparent; border-radius: 100px; background: transparent; color: var(--muted); font: inherit; font-size: .94rem; cursor: pointer; }
 .waveform-modes button::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mode-color); }

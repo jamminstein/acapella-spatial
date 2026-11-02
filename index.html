@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="landing.css?v=20261101-coral-notes">
   <script src="notes.js?v=20261101-floating-notes" defer></script>
   <script src="landing.js?v=20261101-headset-copy" defer></script>
-  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-floating-1">
-  <script type="module" src="waveform-loader.js?v=20261102-floating-1"></script>
+  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-orbit-1">
+  <script type="module" src="waveform-loader.js?v=20261102-orbit-1"></script>
   <script src="icon.js?v=20261031-icon" defer></script>
   <script src="masks.js?v=20261101-ahem-ready" defer></script>
 </head>
@@ -115,14 +115,13 @@
         </figure>
         <section class="sound-playground" id="sound-playground" data-media-root="media/playground/v2" aria-label="Place a sound in space">
           <div class="waveform-stage">
-            <img class="waveform-fallback" src="media/playground/v2/plain.svg" width="1200" height="520" loading="lazy" alt="Plain voice waveform">
-            <canvas hidden tabindex="0" aria-label="Plain waveform. Drag to place the sound. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center."></canvas>
+            <img class="waveform-fallback" src="media/playground/v2/plain.svg?v=20261102-orbit-1" width="1200" height="520" loading="lazy" alt="Plain voice waveform">
+            <canvas hidden tabindex="0" aria-label="Plain waveform. Drag left or right. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center."></canvas>
             <button type="button" class="waveform-reset" data-wave-reset hidden aria-label="Return ribbon to center">↺</button>
-            <span class="waveform-drag-hint" hidden>drag to place</span>
           </div>
           <output class="waveform-sr-only" data-wave-position aria-live="polite"></output>
           <div class="waveform-modes" role="group" aria-label="Choose a sound" hidden>
-            <button type="button" data-wave-mode="plain" aria-pressed="true" style="--mode-color:#b0714a">Plain</button>
+            <button type="button" data-wave-mode="plain" aria-pressed="true" style="--mode-color:#f48f78">Plain</button>
             <button type="button" data-wave-mode="hum" aria-pressed="false" style="--mode-color:#1270b8">Hum</button>
             <button type="button" data-wave-mode="chant" aria-pressed="false" style="--mode-color:#ffc003">Chant</button>
             <button type="button" data-wave-mode="scream" aria-pressed="false" style="--mode-color:#ce2021">Scream</button>

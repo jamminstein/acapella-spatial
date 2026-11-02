@@ -2,7 +2,7 @@
 
 Static product, privacy, and support website for Acapella Spatial, a spatial vocal looper for Apple Vision Pro.
 
-Hosted with GitHub Pages at <https://jamminstein.github.io/acapella-spatial/>. There is no build step, contact backend, analytics script, cookie storage, or third-party embed.
+Hosted with GitHub Pages at <https://jamminstein.github.io/acapella-spatial/>. The published files are static; deployment needs no build step. There is no contact backend, analytics script, cookie storage, or third-party embed.
 
 ## Preview
 
@@ -17,6 +17,43 @@ Open <http://127.0.0.1:8767/>. `index.html` is the landing page; `privacy.html` 
 The full privacy policy is also retained in the landing page’s `#privacy` section, preserving access through the original root privacy URL. Its policy body and the support page’s body are unchanged; only the surrounding presentation and site navigation differ.
 
 ## Media
+
+### Waveform playground
+
+“Same voice. New tricks.” sits in Room to experiment. Its seven selectable modes
+use the app's native ribbon builders: rounded (Plain, Hum, Whisper), dotted
+(Chant), pixelated (Scream, Vocode), and sharp (Tsk). Geometry was exported by
+running the Swift mesh-building methods, including their deterministic Float
+noise, edge tapering and rendered playhead paths. Mode colors match the app.
+
+The shared four-second phrase comes from the owner's bundled backing-vocal
+recording. Seven six-second AAC samples demonstrate curated settings, including
+effect tails. They use Apple's native audio units and the app's own vocoder,
+with listening levels matched to approximately −20 LUFS. These are fixed stereo
+examples of the effects, not a reproduction of head-tracked spatial playback or
+a claim that each mode always uses these settings. No microphone access is used.
+
+Drag the model in any direction, use arrow keys while its canvas is focused, or
+reset the view with Home / the reset button. Sample playback begins only on
+request. Changing mode while playing starts the new sample immediately; changing
+mode while paused stays paused. Video and sample playback are mutually exclusive.
+The marker follows the exported mesh path. There is no automatic idle rotation.
+
+The self-hosted Three.js bundle loads only near the section, rendering stops
+offscreen, and device pixel ratio is capped at 2. The SVG fallback and sound
+controls remain usable if WebGL is unavailable; without JavaScript, a native
+audio control plays the original phrase. All dependencies and media are local.
+
+To rebuild after editing `src/waveform-viewer.js`:
+
+```sh
+npm ci
+npm run build:waveforms
+```
+
+Commit the resulting `waveform-viewer.bundle.js`; GitHub Pages serves it directly.
+Three.js and esbuild versions are pinned in `package-lock.json`. The Three.js
+license is retained in `media/playground/THREE-LICENSE.txt`.
 
 Only public-facing approved artwork, screenshots, and final marketing films belong here. Do not add the app source, Xcode projects, capture fixtures, raw recordings, Blender projects, or review account details.
 
@@ -48,9 +85,9 @@ Keep the short landing page free of hero navigation buttons and song pickers. Sa
 
 The two 36-second concept films draw from four owner-supplied recordings: **Mouth Party**, **Puff Parade**, **Breath Club**, and **Cheeky Beats**. On each page load, the songs are shuffled and each perspective receives a different one. Its song stays fixed across scrolling, pauses, and replays. There is no playlist, song picker, or full-track link; native video controls remain available. On desktop, stopped videos show a centered Play control (Replay after completion, Try again on a media error); the sound toggle appears only during playback. On iPhone, iPad, and other touch devices, only the browser’s native controls are shown. Without JavaScript, both videos retain the default Mouth Party soundtrack.
 
-`media/videos/soundtracks-v2/` contains eight H.264/AAC variants, named `{third,first}-{track-id}.mp4`, plus one VTT sound-description track per song. `media/audio/soundtracks-v2/` contains the four complete recordings converted from Opus to AAC for browser compatibility. Each film uses 0:00–0:36 of its selected track with a 0.75-second ending fade. No volume adjustment was needed. The first-person films are 1920 × 1080; the current viewer films are natively rendered at 3840 × 2160. Both run for 36 seconds at 24 fps, with 864 frames. The 4K H.264 files use BT.709 color, 4:2:0 sampling, and a front-loaded MP4 index for streaming. Every complete file decoded successfully; the current viewer film preserves the four existing soundtrack audio streams exactly. The earlier website movie files and their original audio have been removed from this repository; immutable source films remain in the private workspace. Versioned URLs avoid reusing cached copies.
+`media/videos/soundtracks-v2/` contains eight H.264/AAC variants, named `{third,first}-{track-id}.mp4`, plus one VTT sound-description track per song. `media/audio/soundtracks-v2/` contains the four complete recordings converted from Opus to AAC for browser compatibility. Each film uses 0:00–0:36 of its selected track with a 0.75-second ending fade. No volume adjustment was needed. Both current perspectives are natively rendered at 3840 × 2160. Both run for 36 seconds at 24 fps, with 864 frames. The 4K H.264 files use BT.709 color, 4:2:0 sampling, and a front-loaded MP4 index for streaming. Every complete file decoded successfully; both current films preserve their four existing soundtrack audio streams exactly. The earlier website movie files and their original audio have been removed from this repository; immutable source films remain in the private workspace. Versioned URLs avoid reusing cached copies.
 
-These are concept films, not App Store previews or app recordings. The third-person film now uses the approved adult Black woman from the illustrated cast; sixteen waveforms appear individually. The new movies, matching captions, and poster use `media/videos/woman-4k-v1/` so cached copies of the previous singer cannot replace the approved revision. Its per-video `data-film-root` controls the randomized movie and caption paths together. The approved framing and wave animation are preserved. Near-opaque character pixels are normalized in the render material to avoid transparent patches; the source artwork is unchanged. The first-person film remains in `soundtracks-v2`, and earlier public media URLs remain available for cached pages. Both perspectives now use only the four supplied songs. The App Store previews and built-in demo recordings are separate and unchanged.
+These are concept films, not App Store previews or app recordings. The third-person film now uses the approved adult Black woman from the illustrated cast; sixteen waveforms appear individually. The new movies, matching captions, and poster use `media/videos/woman-4k-v1/` so cached copies of the previous singer cannot replace the approved revision. Its per-video `data-film-root` controls the randomized movie and caption paths together. The approved framing and wave animation are preserved. Near-opaque character pixels are normalized in the render material to avoid transparent patches; the source artwork is unchanged. The headset-perspective film uses `media/videos/headset-4k-v1/` with its own `data-film-root`, matching poster and captions. Its original 16.5 mm camera, sixteen waveforms, timing and audio are preserved; only the native render resolution changes. Earlier public media URLs remain available for cached pages. Both perspectives now use only the four supplied songs. The App Store previews and built-in demo recordings are separate and unchanged.
 
 On phones and tablets, playback is tap-to-play through native controls. No autoplay attempts, custom Play overlay, shared mute/volume writes, viewport pause/resume, or visibility/fullscreen handlers run. Starting another film pauses the previous one; explicitly closing the wearer’s perspective pauses its video. Safari owns all other playback behavior. This replaces the earlier phone enhancement after continued physical-device startup failures.
 

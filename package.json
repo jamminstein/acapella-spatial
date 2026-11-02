@@ -1,0 +1,15 @@
+{
+  "name": "acapella-spatial-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:waveforms": "esbuild src/waveform-viewer.js --bundle --minify --format=esm --target=es2022 --outfile=waveform-viewer.bundle.js",
+    "test": "node tests/film-playback.cjs && node tests/logo-ahem.cjs && node tests/playground-assets.cjs"
+  },
+  "dependencies": {
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

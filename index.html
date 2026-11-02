@@ -28,6 +28,8 @@
   <link rel="stylesheet" href="landing.css?v=20261101-coral-notes">
   <script src="notes.js?v=20261101-floating-notes" defer></script>
   <script src="landing.js?v=20261101-headset-copy" defer></script>
+  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-1">
+  <script type="module" src="waveform-loader.js?v=20261102-1"></script>
   <script src="icon.js?v=20261031-icon" defer></script>
   <script src="masks.js?v=20261101-ahem-ready" defer></script>
 </head>
@@ -104,6 +106,30 @@
     <section class="studio-section section-space" aria-labelledby="studio-title">
       <div class="shell">
         <div class="studio-heading"><h2 id="studio-title">Room to <br>experiment.</h2><div class="studio-intro"><p>Change the pitch, add reverb or delay, or try granular effects. See what sounds good to you.</p></div></div>
+        <section class="sound-playground" id="sound-playground" data-media-root="media/playground/v1" aria-labelledby="playground-title">
+          <div class="playground-heading"><h3 id="playground-title">Same voice. New tricks.</h3><p>One little phrase, seven ways.</p></div>
+          <div class="waveform-stage">
+            <img class="waveform-fallback" src="media/playground/v1/plain.svg" width="1200" height="520" loading="lazy" alt="Plain voice waveform">
+            <canvas hidden tabindex="0" aria-label="Plain waveform. Drag to rotate freely, or use arrow keys. Home resets the view."></canvas>
+            <button type="button" class="waveform-reset" data-wave-reset hidden aria-label="Reset waveform view">↺</button>
+            <span class="waveform-drag-hint" hidden>drag to turn</span>
+          </div>
+          <div class="waveform-modes" role="group" aria-label="Choose a sound" hidden>
+            <button type="button" data-wave-mode="plain" aria-pressed="true" style="--mode-color:#b0714a">Plain</button>
+            <button type="button" data-wave-mode="hum" aria-pressed="false" style="--mode-color:#1270b8">Hum</button>
+            <button type="button" data-wave-mode="chant" aria-pressed="false" style="--mode-color:#ffc003">Chant</button>
+            <button type="button" data-wave-mode="scream" aria-pressed="false" style="--mode-color:#ce2021">Scream</button>
+            <button type="button" data-wave-mode="whisper" aria-pressed="false" style="--mode-color:#a866e8">Whisper</button>
+            <button type="button" data-wave-mode="clap" aria-pressed="false" style="--mode-color:#1aa167">Tsk</button>
+            <button type="button" data-wave-mode="vocode" aria-pressed="false" style="--mode-color:#00beaa">Vocode</button>
+          </div>
+          <div class="waveform-listen-row">
+            <button type="button" data-wave-play class="waveform-play" hidden><svg class="wave-play-icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.5v15l12-7.5z" fill="currentColor"/></svg><svg class="wave-pause-icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3h4v14H4zm8 0h4v14h-4z" fill="currentColor"/></svg><span>Listen</span></button>
+            <p data-wave-note>just your voice</p>
+          </div>
+          <audio controls preload="none" src="media/playground/v1/plain.m4a" aria-label="Listen to the shared vocal phrase"><a href="media/playground/v1/plain.m4a">Listen to the phrase</a></audio>
+          <p class="waveform-status" data-wave-status role="status"></p>
+        </section>
         <figure>
           <a class="image-link" href="media/originals/grand-studio-editor.jpg" aria-label="View the full-resolution studio and loop editor screenshot">
             <img src="media/images/grand-studio-editor-1600.jpg" srcset="media/images/grand-studio-editor-800.jpg 800w, media/images/grand-studio-editor-1600.jpg 1600w, media/images/grand-studio-editor-2560.jpg 2560w" sizes="(max-width: 1392px) calc(100vw - 48px), 1344px" width="3840" height="2160" loading="lazy" alt="Acapella's Studio controls and loop editor, with pitch, stretch, volume, reverb, and envelope controls, against a recording-studio backdrop.">
@@ -131,15 +157,15 @@
         <summary><span>From inside the headset</span><span class="inside-meta"><b aria-hidden="true">+</b></span></summary>
         <figure class="film">
           <div class="film-frame">
-            <video id="first-person-film" data-perspective="first" data-soundtrack="mouth-made-symphony" controls playsinline preload="none" poster="media/videos/first-person-poster.jpg" aria-label="Spatial singing animation, from inside the headset">
-              <source src="media/videos/soundtracks-v2/first-mouth-made-symphony.mp4" type="video/mp4">
-              <track kind="captions" src="media/videos/soundtracks-v2/mouth-made-symphony.vtt" srclang="en" label="English sound descriptions">
-              Your browser does not support embedded video. <a data-film-fallback href="media/videos/soundtracks-v2/first-mouth-made-symphony.mp4">Watch from inside the headset</a>.
+            <video id="first-person-film" data-perspective="first" data-film-root="media/videos/headset-4k-v1" data-soundtrack="mouth-made-symphony" controls playsinline preload="none" poster="media/videos/headset-4k-v1/poster.jpg" aria-label="Spatial singing animation, from inside the headset">
+              <source src="media/videos/headset-4k-v1/first-mouth-made-symphony.mp4" type="video/mp4">
+              <track kind="captions" src="media/videos/headset-4k-v1/mouth-made-symphony.vtt" srclang="en" label="English sound descriptions">
+              Your browser does not support embedded video. <a data-film-fallback href="media/videos/headset-4k-v1/first-mouth-made-symphony.mp4">Watch from inside the headset</a>.
             </video>
             <button class="film-play" type="button" aria-controls="first-person-film" aria-label="Play, video from inside the headset" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 4.5v15l12-7.5z"/></svg><span data-play-label>Play</span></button>
           </div>
           <figcaption class="film-under sound-only"><button class="sound-toggle" type="button" aria-controls="first-person-film" aria-pressed="false" hidden><span aria-hidden="true">♪</span> <span data-sound-label>Sound on</span></button></figcaption>
-          <p class="film-recovery" data-film-recovery="first-person-film" hidden><a class="text-link" data-film-direct="first-person-film" href="media/videos/soundtracks-v2/first-mouth-made-symphony.mp4">Open video</a></p>
+          <p class="film-recovery" data-film-recovery="first-person-film" hidden><a class="text-link" data-film-direct="first-person-film" href="media/videos/headset-4k-v1/first-mouth-made-symphony.mp4">Open video</a></p>
         </figure>
       </details>
     </section>

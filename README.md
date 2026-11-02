@@ -20,29 +20,43 @@ The full privacy policy is also retained in the landing page’s `#privacy` sect
 
 ### Waveform playground
 
-“Same voice. New tricks.” sits in Room to experiment. Its seven selectable modes
-use the app's native ribbon builders: rounded (Plain, Hum, Whisper), dotted
-(Chant), pixelated (Scream, Vocode), and sharp (Tsk). Geometry was exported by
-running the Swift mesh-building methods, including their deterministic Float
-noise, edge tapering and rendered playhead paths. Mode colors match the app.
+The playground sits immediately after the Studio image, without a separate
+heading. Seven modes use the app's native ribbon builders: rounded (Plain, Hum,
+Whisper), dotted (Chant), pixelated (Scream, Vocode), and sharp (Tsk). Geometry
+is exported with the Swift builders, including Float noise, edge tapering, and
+rendered playhead paths. Display scaling makes the ribbon legible in the room.
 
-The shared four-second phrase comes from the owner's bundled backing-vocal
-recording. Seven six-second AAC samples demonstrate curated settings, including
-effect tails. They use Apple's native audio units and the app's own vocoder,
-with listening levels matched to approximately −20 LUFS. These are fixed stereo
-examples of the effects, not a reproduction of head-tracked spatial playback or
-a claim that each mode always uses these settings. No microphone access is used.
+All seven examples use the same close-mic, casual hum from **“Casual Humming” by
+Topschool**, released under CC0. Source, license, and edits are recorded in
+`media/playground/v2/NOTICE.txt`. The plain example keeps the voice uncorrected,
+without accompaniment, denoising, or added reverb. Other examples push the app's
+tools further: octave-down cathedral, telephone coloration and long echoes,
+everything-broken distortion and bitcrush, octave-up air and alien chatter,
+tempo gating and buffer beats, and the app's full-wet Robot vocoder an octave
+lower. Six-second AAC examples include effect tails, matched listening levels,
+and a final limiter. These are curated settings, not each mode's defaults.
 
-Drag the model in any direction, use arrow keys while its canvas is focused, or
-reset the view with Home / the reset button. Sample playback begins only on
-request. Changing mode while playing starts the new sample immediately; changing
-mode while paused stays paused. Video and sample playback are mutually exclusive.
-The marker follows the exported mesh path. There is no automatic idle rotation.
+Drag up to move away, down to move closer, and sideways to reposition the sound.
+The ribbon turns toward the listener as it moves. There is no depth slider or
+camera orbit. Arrow keys do the same; Shift-drag or Shift-Up/Down changes height.
+Home / the reset button returns the sound to center. Switching modes retains
+placement. The pearl follows the ribbon through every transform.
 
-The self-hosted Three.js bundle loads only near the section, rendering stops
-offscreen, and device pixel ratio is capped at 2. The SVG fallback and sound
-controls remain usable if WebGL is unavailable; without JavaScript, a native
-audio control plays the original phrase. All dependencies and media are local.
+A Web Audio HRTF panner places the sample at the displayed position, including
+distance attenuation. Headphones make this easier to hear; it is a fixed-listener
+browser demonstration, not headset tracking. AudioContext resume and native
+media play are both requested synchronously within the original gesture. No
+microphone access is used. Video and sample playback remain mutually exclusive.
+
+The self-hosted Three.js bundle loads near the section, rendering stops offscreen,
+and device pixel ratio is capped at 2. Static SVGs and sound controls remain
+available without WebGL. Without JavaScript, a native audio control plays the raw
+hum. All media is self-hosted. Earlier v1 assets remain for cached pages.
+
+`npm test` covers placement bounds, audio orientation, context reuse/interruption,
+asset completeness, and existing film and logo behavior. Open
+`tests/spatial-audio-browser.html` in a browser to render native offline HRTF
+checks for left/right channel energy and near/far attenuation without audible output.
 
 To rebuild after editing `src/waveform-viewer.js`:
 

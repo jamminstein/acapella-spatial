@@ -13,7 +13,11 @@
 .waveform-stage canvas { cursor: grab; outline: none; touch-action: none; }
 .waveform-stage canvas.is-grabbing { cursor: grabbing; }
 .waveform-stage canvas:focus-visible:not(.is-pointer-focused) { outline: 2px solid var(--orange); outline-offset: -4px; border-radius: 12px; }
-.waveform-reset { position: absolute; top: 6px; right: 12px; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: rgba(255,255,255,.45); color: var(--ink); font-size: 1.6rem; cursor: pointer; }
+.waveform-reset { position: absolute; top: 3px; right: 9px; width: 70px; height: 70px; padding: 3px; border: 0; border-radius: 12px; background: none; cursor: pointer; touch-action: manipulation; }
+.waveform-reset svg { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; transform: perspective(220px) rotateX(8deg) rotateY(-12deg) rotate(-6deg); filter: drop-shadow(3px 7px 4px #71442629); transition: transform 180ms ease, filter 180ms ease; }
+.waveform-reset:hover svg { transform: perspective(220px) rotateX(4deg) rotateY(-7deg) rotate(-2deg) translateY(-2px); filter: drop-shadow(3px 9px 5px #71442626); }
+.waveform-reset:active svg { transform: perspective(220px) rotateX(8deg) rotateY(-12deg) rotate(-6deg) translateY(1px); }
+@media (prefers-reduced-motion: reduce) { .waveform-reset svg { transition: none; } }
 .waveform-modes { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 18px 12px 0; }
 .waveform-modes button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 17px; border: 1px solid transparent; border-radius: 100px; background: transparent; color: var(--muted); font: inherit; font-size: .94rem; cursor: pointer; }
 .waveform-modes button::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mode-color); }
@@ -52,4 +56,3 @@
   opacity: var(--shadow-opacity, 0);
   filter: blur(var(--shadow-blur, 10px));
 }
-.waveform-fallback { filter: saturate(.7) brightness(1.08); }

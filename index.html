@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="landing.css?v=20261101-coral-notes">
   <script src="notes.js?v=20261101-floating-notes" defer></script>
   <script src="landing.js?v=20261101-headset-copy" defer></script>
-  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-orbit-1">
-  <script type="module" src="waveform-loader.js?v=20261102-orbit-1"></script>
+  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-cycle-depth-1">
+  <script type="module" src="waveform-loader.js?v=20261102-cycle-depth-1"></script>
   <script src="icon.js?v=20261031-icon" defer></script>
   <script src="masks.js?v=20261101-ahem-ready" defer></script>
 </head>
@@ -115,9 +115,21 @@
         </figure>
         <section class="sound-playground" id="sound-playground" data-media-root="media/playground/v2" aria-label="Place a sound in space">
           <div class="waveform-stage">
-            <img class="waveform-fallback" src="media/playground/v2/plain.svg?v=20261102-orbit-1" width="1200" height="520" loading="lazy" alt="Plain voice waveform">
+            <img class="waveform-fallback" src="media/playground/v2/plain.svg?v=20261102-cycle-depth-1" width="1200" height="520" loading="lazy" alt="Plain voice waveform">
             <canvas hidden tabindex="0" aria-label="Plain waveform. Drag left or right. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center."></canvas>
-            <button type="button" class="waveform-reset" data-wave-reset hidden aria-label="Return ribbon to center">↺</button>
+            <button type="button" class="waveform-reset" data-wave-reset hidden aria-label="Return ribbon to center">
+              <svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">
+                <defs>
+                  <linearGradient id="wave-return-face" x1="0" y1="0" x2=".7" y2="1">
+                    <stop offset="0" stop-color="#f4d9cc"/><stop offset=".48" stop-color="#deae9a"/><stop offset="1" stop-color="#cc927d"/>
+                  </linearGradient>
+                  <path id="wave-return-shape" d="M15 34Q12 34 12 31V13Q12 10 15 10H36Q39 10 37 13L30 20C44 13 58 20 64 32C73 49 61 67 46 69C31 72 20 62 17 51L28 47C31 57 40 61 49 56C59 50 56 36 47 32C41 29 36 30 32 32L38 37Q40 40 36 39Z"/>
+                </defs>
+                <use href="#wave-return-shape" transform="translate(4 5)" fill="#a9705f"/>
+                <use href="#wave-return-shape" transform="translate(2 3)" fill="#c58d77"/>
+                <use href="#wave-return-shape" fill="url(#wave-return-face)" stroke="#f6dfd2" stroke-width=".7"/>
+              </svg>
+            </button>
           </div>
           <output class="waveform-sr-only" data-wave-position aria-live="polite"></output>
           <div class="waveform-modes" role="group" aria-label="Choose a sound" hidden>

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
-import { HOME, LISTENER_Z, boundPosition, describePosition, ribbonYaw, fitRibbonToView } from './spatial-position.js';
+import { HOME, LISTENER_Z, boundPosition, describePosition, ribbonYaw, fitRibbonToView, ribbonBounds, RIBBON_BOUNDS, RIBBON_SCALE, ribbonShadow } from './spatial-position.js';
 import { spatialAudio } from './spatial-audio.js';
+import { presetPlayback } from './preset-playback.js';
+import { MODE_COLORS } from './mode-colors.js';
 
 const root = document.querySelector('.sound-playground');
 const audio = root.querySelector('audio');
@@ -13,7 +15,7 @@ const canvas = root.querySelector('canvas');
 const fallback = root.querySelector('.waveform-fallback');
 const reset = root.querySelector('[data-wave-reset]');
 const mediaRoot = root.dataset.mediaRoot;
-const visualAssetURL = name => `${mediaRoot}/${name}?v=20261102-orbit-1`;
+const visualAssetURL = name => `${mediaRoot}/${name}?v=20261102-cycle-depth-1`;
 const positionOutput = root.querySelector('[data-wave-position]');
 const descriptions = {
   plain: 'no effects', hum: 'an octave down, in a cathedral', chant: 'telephone voice + long echoes',
@@ -31,79 +33,49 @@ function place(next, announce = false) {
 }
 reset.addEventListener('click', () => place(HOME, true));
 let selected = 'plain';
-let requestId = 0;
 let renderScene = () => {};
 let changeMesh = () => {};
 let requestFrame = () => {};
 
 function updateButton() {
-  const playing = !audio.paused && !audio.ended;
+  const playing = playback.active;
   play.classList.toggle('is-playing', playing);
   label.textContent = playing ? 'Pause' : audio.ended ? 'Again' : 'Listen';
   play.setAttribute('aria-label', `${label.textContent}, ${selected === 'clap' ? 'TSK' : selected} sample`);
 }
-function startAudio() {
-  const current = ++requestId;
-  status.textContent = '';
-  if (audio.error) audio.load();
-  if (audio.ended) audio.currentTime = 0;
-  // Keep play() in the original click gesture, including Safari source changes.
-  try {
-    spatial.unlock().catch(() => {
-      if (current !== requestId) return;
-      audio.pause(); status.textContent = 'Tap Listen to reconnect the sound';
-    });
-  } catch {
-    status.textContent = 'Spatial audio couldn’t start. Tap Listen to retry';
-    return;
+const playback = presetPlayback({
+  audio,
+  modes: modeButtons.map(button => button.dataset.waveMode),
+  initialMode: selected,
+  sourceForMode: mode => `${mediaRoot}/${mode}.m4a`,
+  unlock: () => spatial.unlock(),
+  canPlay: () => !document.hidden,
+  onMessage: message => { status.textContent = message; },
+  onStateChange: () => { updateButton(); renderScene(); },
+  onStarted: () => {
+    document.querySelectorAll('video').forEach(video => video.pause());
+    requestFrame();
+  },
+  onSelect: mode => {
+    selected = mode;
+    const button = modeButtons.find(item => item.dataset.waveMode === mode);
+    fallback.src = visualAssetURL(`${mode}.svg`);
+    fallback.alt = `${button.textContent.trim()} waveform`;
+    note.textContent = descriptions[mode];
+    modeButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    canvas.setAttribute('aria-label', `${button.textContent.trim()} waveform. Drag left or right. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center.`);
+    changeMesh(mode);
   }
-  const promise = audio.play();
-  promise?.catch(() => {
-    if (current !== requestId) return;
-    status.textContent = 'Tap Listen to try again';
-    updateButton();
-  });
-}
-play.addEventListener('click', () => {
-  if (!audio.paused && !audio.ended) { ++requestId; audio.pause(); }
-  else startAudio();
 });
-audio.addEventListener('play', () => {
-  document.querySelectorAll('video').forEach(video => video.pause());
-  updateButton(); requestFrame();
-});
-for (const event of ['pause', 'ended', 'loadedmetadata']) audio.addEventListener(event, () => {
-  updateButton(); renderScene();
-});
-audio.addEventListener('error', () => {
-  status.textContent = 'This sample couldn’t load. Tap Listen to retry';
-  updateButton();
-});
+play.addEventListener('click', () => playback.toggle());
+for (const button of modeButtons) button.addEventListener('click', () => playback.select(button.dataset.waveMode));
 document.querySelectorAll('video').forEach(video => video.addEventListener('play', () => {
-  ++requestId; audio.pause();
+  if (!video.paused) playback.pause();
 }));
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { ++requestId; audio.pause(); }
-});
+document.addEventListener('visibilitychange', () => { if (document.hidden) playback.pause(); });
+// Preserve a paused state through page cache/navigation as well as tab hiding.
+window.addEventListener('pagehide', () => playback.pause());
 
-for (const button of modeButtons) button.addEventListener('click', () => {
-  const mode = button.dataset.waveMode;
-  if (mode === selected) return;
-  const continuePlaying = !audio.paused && !audio.ended;
-  ++requestId;
-  selected = mode;
-  audio.pause();
-  audio.src = `${mediaRoot}/${mode}.m4a`;
-  fallback.src = visualAssetURL(`${mode}.svg`);
-  fallback.alt = `${button.textContent.trim()} waveform`;
-  note.textContent = descriptions[mode];
-  status.textContent = '';
-  modeButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-  canvas.setAttribute('aria-label', `${button.textContent.trim()} waveform. Drag left or right. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center.`);
-  changeMesh(mode);
-  updateButton();
-  if (continuePlaying) startAudio();
-});
 root.querySelector('.waveform-modes').hidden = false;
 place(HOME);
 play.hidden = false;
@@ -133,6 +105,7 @@ async function createViewer() {
   // The ribbon floats freely; its projected shadow falls on the controls.
   const modes = root.querySelector('.waveform-modes');
   const object = new THREE.Group(); scene.add(object);
+  object.scale.set(RIBBON_SCALE.x, RIBBON_SCALE.y, RIBBON_SCALE.z);
   const pearlMaterial = new THREE.MeshStandardMaterial({ color: 0xfffdf7, roughness: .23 });
   const pearlGeometry = new THREE.SphereGeometry(.0055, 20, 16);
   const startPearl = new THREE.Mesh(pearlGeometry, pearlMaterial);
@@ -145,13 +118,13 @@ async function createViewer() {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(asset.positions, 3));
     geometry.setIndex(asset.indices); geometry.computeVertexNormals();
     const plain = asset.id === 'plain';
-    const color = new THREE.Color(plain ? '#ff785f' : asset.color).lerp(new THREE.Color(plain ? '#ffe6df' : '#e8ded5'), plain ? .08 : .28);
-    const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: plain ? .12 : .025,
+    const color = new THREE.Color(MODE_COLORS[asset.id]);
+    const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: plain ? .12 : .055,
       roughness: asset.style === 'rounded' ? .3 : .5, flatShading: ['pixelated', 'dotted'].includes(asset.style), side: THREE.DoubleSide });
     const mesh = new THREE.Mesh(geometry, material); mesh.visible = false; object.add(mesh);
-    prepared.set(asset.id, { mesh, path: asset.path, color: asset.color });
+    prepared.set(asset.id, { mesh, path: asset.path, bounds: ribbonBounds(asset) });
   }
-  let path = [];
+  let path = [], activeBounds = RIBBON_BOUNDS;
   function pointAt(progress, target) {
     const count = path.length / 3, n = Math.max(0, Math.min(1, progress)) * (count - 1);
     const a = Math.floor(n), b = Math.min(a + 1, count - 1), t = n - a;
@@ -166,7 +139,7 @@ async function createViewer() {
     pointAt(Number.isFinite(audio.duration) ? audio.currentTime / audio.duration : 0, cursor.position);
     cursor.visible = audio.currentTime > 0 && !audio.ended;
     const breath = !audio.paused && !reduceMotion.matches ? 1 + .01 * Math.sin(audio.currentTime * 4) : 1;
-    object.scale.set(4.5 * breath, 7 * breath, 4.5 * breath);
+    object.scale.set(RIBBON_SCALE.x * breath, RIBBON_SCALE.y * breath, RIBBON_SCALE.z * breath);
     renderer.render(scene, camera);
   };
   function tick() {
@@ -183,25 +156,30 @@ async function createViewer() {
     const projected = object.position.clone().project(camera);
     const left = startPearl.getWorldPosition(new THREE.Vector3()).project(camera);
     const right = endPearl.getWorldPosition(new THREE.Vector3()).project(camera);
-    const depthScale = LISTENER_Z / (LISTENER_Z - position.z);
-    const width = Math.abs(right.x - left.x) * canvas.clientWidth / 2;
-    modes.style.setProperty('--shadow-x', `${(projected.x + 1) * 50}%`);
-    modes.style.setProperty('--shadow-width', `${Math.max(45, width * .95)}px`);
-    modes.style.setProperty('--shadow-height', `${42 * depthScale}px`);
-    modes.style.setProperty('--shadow-y', `${(depthScale - 1) * 24}px`);
-    modes.style.setProperty('--shadow-blur', `${8 + depthScale * 2 + (position.y - HOME.y) * 5}px`);
-    modes.style.setProperty('--shadow-opacity', String(.11 + depthScale * .04 - (position.y - HOME.y) * .035));
+    const shadow = ribbonShadow(position, {
+      projectedX: projected.x,
+      projectedWidth: Math.abs(right.x - left.x) * canvas.clientWidth / 2,
+      areaWidth: modes.clientWidth,
+      areaHeight: modes.clientHeight
+    });
+    modes.style.setProperty('--shadow-x', `${shadow.x}%`);
+    for (const property of ['width', 'height', 'y', 'blur']) {
+      modes.style.setProperty(`--shadow-${property}`, `${shadow[property]}px`);
+    }
+    modes.style.setProperty('--shadow-opacity', String(shadow.opacity));
     renderScene();
   };
   changeMesh = mode => {
     for (const [id, value] of prepared) value.mesh.visible = id === mode;
-    const selected = prepared.get(mode); path = selected.path;
-    pointAt(0, startPearl.position); pointAt(1, endPearl.position); placeObject();
+    const selected = prepared.get(mode); path = selected.path; activeBounds = selected.bounds;
+    pointAt(0, startPearl.position); pointAt(1, endPearl.position);
+    // Cycling from a short to a tall preset at close range must fit immediately.
+    place(position);
   };
 
   // Placement and rendering share the amplified orbit angle; bounds include
   // the nearer tip and the tallest waveform, even on a narrow phone.
-  constrainToView = next => fitRibbonToView(next, camera);
+  constrainToView = next => fitRibbonToView(next, camera, activeBounds);
   let drag = null;
   canvas.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0) return;
@@ -221,7 +199,7 @@ async function createViewer() {
     const dy = (event.clientY - drag.y) / rect.height;
     const next = boundPosition({ ...drag.position,
       y: drag.heightDrag ? drag.position.y - dy * 3 : drag.position.y,
-      z: drag.heightDrag ? drag.position.z : drag.position.z + dy * 8 });
+      z: drag.heightDrag ? drag.position.z : drag.position.z + dy * 12 });
     const halfWidth = (LISTENER_Z - next.z) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
     next.x = (drag.screenX + (event.clientX - drag.x) / rect.width * 2) * halfWidth;
     place(next);
@@ -240,8 +218,8 @@ async function createViewer() {
     if (event.key === 'Home') return place(HOME, true);
     if (event.key === 'ArrowLeft') next.x -= step;
     if (event.key === 'ArrowRight') next.x += step;
-    if (event.key === 'ArrowUp') { if (event.shiftKey) next.y += step; else next.z -= step; }
-    if (event.key === 'ArrowDown') { if (event.shiftKey) next.y -= step; else next.z += step; }
+    if (event.key === 'ArrowUp') { if (event.shiftKey) next.y += step; else next.z -= .24; }
+    if (event.key === 'ArrowDown') { if (event.shiftKey) next.y -= step; else next.z += .24; }
     place(next, true);
   });
   function resize() {

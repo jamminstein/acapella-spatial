@@ -4,7 +4,7 @@ if (playground) {
   const load = () => {
     if (loaded) return;
     loaded = true;
-    import('./waveform-viewer.bundle.js?v=20261102-orbit-1').catch(() => {
+    import('./waveform-viewer.bundle.js?v=20261102-cycle-depth-1').catch(() => {
       playground.querySelector('[data-wave-status]').textContent = 'You can listen to the original phrase below';
     });
   };

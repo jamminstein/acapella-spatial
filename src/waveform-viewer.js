@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOME, LISTENER_Z, boundPosition, describePosition } from './spatial-position.js';
+import { HOME, LISTENER_Z, boundPosition, describePosition, ribbonYaw, fitRibbonToView } from './spatial-position.js';
 import { spatialAudio } from './spatial-audio.js';
 
 const root = document.querySelector('.sound-playground');
@@ -13,6 +13,7 @@ const canvas = root.querySelector('canvas');
 const fallback = root.querySelector('.waveform-fallback');
 const reset = root.querySelector('[data-wave-reset]');
 const mediaRoot = root.dataset.mediaRoot;
+const visualAssetURL = name => `${mediaRoot}/${name}?v=20261102-orbit-1`;
 const positionOutput = root.querySelector('[data-wave-position]');
 const descriptions = {
   plain: 'no effects', hum: 'an octave down, in a cathedral', chant: 'telephone voice + long echoes',
@@ -93,12 +94,12 @@ for (const button of modeButtons) button.addEventListener('click', () => {
   selected = mode;
   audio.pause();
   audio.src = `${mediaRoot}/${mode}.m4a`;
-  fallback.src = `${mediaRoot}/${mode}.svg`;
+  fallback.src = visualAssetURL(`${mode}.svg`);
   fallback.alt = `${button.textContent.trim()} waveform`;
   note.textContent = descriptions[mode];
   status.textContent = '';
   modeButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-  canvas.setAttribute('aria-label', `${button.textContent.trim()} waveform. Drag to place the sound. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center.`);
+  canvas.setAttribute('aria-label', `${button.textContent.trim()} waveform. Drag left or right. Up moves it away; down brings it closer. Arrow keys move it; Shift and up/down change height. Home returns it to the center.`);
   changeMesh(mode);
   updateButton();
   if (continuePlaying) startAudio();
@@ -110,7 +111,7 @@ audio.controls = false;
 updateButton();
 
 async function createViewer() {
-  const response = await fetch(`${mediaRoot}/meshes.json`);
+  const response = await fetch(visualAssetURL('meshes.json'));
   if (!response.ok) throw new Error('Mesh data unavailable');
   const assets = await response.json();
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -143,8 +144,9 @@ async function createViewer() {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(asset.positions, 3));
     geometry.setIndex(asset.indices); geometry.computeVertexNormals();
-    const color = new THREE.Color(asset.color).lerp(new THREE.Color('#e8ded5'), .28);
-    const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: .025,
+    const plain = asset.id === 'plain';
+    const color = new THREE.Color(plain ? '#ff785f' : asset.color).lerp(new THREE.Color(plain ? '#ffe6df' : '#e8ded5'), plain ? .08 : .28);
+    const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: plain ? .12 : .025,
       roughness: asset.style === 'rounded' ? .3 : .5, flatShading: ['pixelated', 'dotted'].includes(asset.style), side: THREE.DoubleSide });
     const mesh = new THREE.Mesh(geometry, material); mesh.visible = false; object.add(mesh);
     prepared.set(asset.id, { mesh, path: asset.path, color: asset.color });
@@ -176,7 +178,7 @@ async function createViewer() {
   requestFrame = () => { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(tick); };
   placeObject = () => {
     object.position.set(position.x, position.y, position.z);
-    object.rotation.y = Math.atan2(-position.x, LISTENER_Z - position.z);
+    object.rotation.y = ribbonYaw(position, camera);
     object.updateMatrixWorld(true);
     const projected = object.position.clone().project(camera);
     const left = startPearl.getWorldPosition(new THREE.Vector3()).project(camera);
@@ -197,37 +199,18 @@ async function createViewer() {
     pointAt(0, startPearl.position); pointAt(1, endPearl.position); placeObject();
   };
 
-  // Fit the permitted horizontal travel to the viewport at the current depth.
-  // A constant world-space limit would trap the ribbon near the middle on desktop.
-  constrainToView = next => {
-    const p = boundPosition(next);
-    const depth = LISTENER_Z - p.z;
-    const tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    const halfHeight = depth * tangent;
-    // Include the turn toward the viewer: at the side, the nearer tip grows.
-    const fits = x => {
-      const angle = Math.atan2(-x, depth), c = Math.cos(angle), s = Math.sin(angle);
-      return [-.97, .97].every(dx => [-.17, .17].every(dz =>
-        Math.abs((x + dx*c + dz*s) / ((depth + dx*s - dz*c) * tangent * camera.aspect)) <= .96));
-    };
-    if (!fits(p.x)) {
-      let low = 0, high = Math.abs(p.x);
-      for (let i = 0; i < 10; i++) {
-        const middle = (low + high) / 2;
-        if (fits(middle)) low = middle; else high = middle;
-      }
-      p.x = Math.sign(p.x) * low;
-    }
-    const verticalRoom = Math.max(0, halfHeight - .82);
-    p.y = THREE.MathUtils.clamp(p.y, HOME.y - verticalRoom, HOME.y + verticalRoom);
-    return p;
-  };
+  // Placement and rendering share the amplified orbit angle; bounds include
+  // the nearer tip and the tallest waveform, even on a narrow phone.
+  constrainToView = next => fitRibbonToView(next, camera);
   let drag = null;
   canvas.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0) return;
     const projected = object.position.clone().project(camera);
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY,
       screenX: projected.x, position: { ...position }, heightDrag: event.shiftKey };
+    // Programmatic focus can retain :focus-visible from an earlier keyboard
+    // interaction. Pointer focus must not draw a box around the floating sound.
+    canvas.classList.add('is-pointer-focused');
     canvas.focus({ preventScroll: true });
     canvas.setPointerCapture(event.pointerId); canvas.classList.add('is-grabbing');
     event.preventDefault();
@@ -248,7 +231,9 @@ async function createViewer() {
     drag = null; canvas.classList.remove('is-grabbing'); place(position, true);
   }
   for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(event, endDrag);
+  canvas.addEventListener('blur', () => canvas.classList.remove('is-pointer-focused'));
   canvas.addEventListener('keydown', event => {
+    canvas.classList.remove('is-pointer-focused');
     const step = .12, next = { ...position };
     if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home'].includes(event.key)) return;
     event.preventDefault();
@@ -269,7 +254,6 @@ async function createViewer() {
     renderer.setSize(width, height, false); place(position);
   }
   canvas.hidden = false; fallback.hidden = true; reset.hidden = false;
-  root.querySelector('.waveform-drag-hint').hidden = false;
   changeMesh(selected); placeObject();
   new ResizeObserver(resize).observe(canvas.parentElement);
   new IntersectionObserver(entries => {
@@ -279,12 +263,11 @@ async function createViewer() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) requestFrame(); });
   canvas.addEventListener('webglcontextlost', event => {
     event.preventDefault(); canvas.hidden = true; fallback.hidden = false; reset.hidden = true;
-    root.querySelector('.waveform-drag-hint').hidden = true;
     status.textContent = '3D view paused. You can still try the sounds';
   });
   canvas.addEventListener('webglcontextrestored', () => {
     canvas.hidden = false; fallback.hidden = true; reset.hidden = false;
-    root.querySelector('.waveform-drag-hint').hidden = false; status.textContent = ''; resize();
+    status.textContent = ''; resize();
   });
   resize(); requestFrame();
 }

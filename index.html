@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="landing.css?v=20261101-coral-notes">
   <script src="notes.js?v=20261101-floating-notes" defer></script>
   <script src="landing.js?v=20261101-headset-copy" defer></script>
-  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-cycle-depth-1">
-  <script type="module" src="waveform-loader.js?v=20261102-cycle-depth-1"></script>
+  <link rel="stylesheet" href="waveform-viewer.css?v=20261102-playback-polish-1">
+  <script type="module" src="waveform-loader.js?v=20261102-playback-polish-1"></script>
   <script src="icon.js?v=20261031-icon" defer></script>
   <script src="masks.js?v=20261101-ahem-ready" defer></script>
 </head>
@@ -123,11 +123,12 @@
                   <linearGradient id="wave-return-face" x1="0" y1="0" x2=".7" y2="1">
                     <stop offset="0" stop-color="#f4d9cc"/><stop offset=".48" stop-color="#deae9a"/><stop offset="1" stop-color="#cc927d"/>
                   </linearGradient>
-                  <path id="wave-return-shape" d="M15 34Q12 34 12 31V13Q12 10 15 10H36Q39 10 37 13L30 20C44 13 58 20 64 32C73 49 61 67 46 69C31 72 20 62 17 51L28 47C31 57 40 61 49 56C59 50 56 36 47 32C41 29 36 30 32 32L38 37Q40 40 36 39Z"/>
+                  <path id="wave-return-shape" d="M22 25C32 13 49 17 57 29C68 46 56 64 39 62C29 61 21 55 19 46M22 13L22 25L34 25"/>
                 </defs>
-                <use href="#wave-return-shape" transform="translate(4 5)" fill="#a9705f"/>
-                <use href="#wave-return-shape" transform="translate(2 3)" fill="#c58d77"/>
-                <use href="#wave-return-shape" fill="url(#wave-return-face)" stroke="#f6dfd2" stroke-width=".7"/>
+                <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <use href="#wave-return-shape" transform="translate(.6 .9)" stroke="#b9826f" stroke-width="2.8"/>
+                  <use href="#wave-return-shape" stroke="url(#wave-return-face)" stroke-width="2.2"/>
+                </g>
               </svg>
             </button>
           </div>

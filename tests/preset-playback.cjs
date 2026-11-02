@@ -76,16 +76,16 @@ test('starting at another preset continues from there in displayed order', async
   assert.deepEqual(f.calls, ['/samples/whisper.m4a', '/samples/clap.m4a', '/samples/vocode.m4a', '/samples/plain.m4a']);
 });
 
-test('manual selection while playing stops and waits for explicit Play', async () => {
+test('manual selection while playing starts the selected preset in the same click and keeps cycling', async () => {
   const f = await fixture(); f.cycle.play(); await f.flush();
   f.audio.currentTime = 2;
-  f.cycle.select('chant'); await f.flush();
-  assert.equal(f.audio.paused, true); assert.equal(f.cycle.active, false);
+  f.cycle.select('chant');
+  assert.equal(f.calls.length, 2, 'replacement play must happen synchronously in the selection gesture');
+  assert.equal(f.audio.paused, false); assert.equal(f.cycle.active, true);
   assert.equal(f.cycle.selected, 'chant'); assert.equal(f.audio.currentTime, 0);
-  assert.equal(f.calls.length, 1);
   f.audio.emit('loadedmetadata'); f.audio.emit('ended'); await f.flush();
-  assert.equal(f.calls.length, 1);
-  f.cycle.play(); await f.flush(); f.end(); await f.flush();
+  assert.equal(f.calls.length, 2, 'a queued old ended event must not skip the selected preset');
+  f.end(); await f.flush();
   assert.deepEqual(f.calls, ['/samples/plain.m4a', '/samples/chant.m4a', '/samples/scream.m4a']);
 });
 
@@ -112,19 +112,19 @@ test('duplicate ended events cannot skip the next preset', async () => {
   assert.equal(f.cycle.selected, 'hum'); assert.equal(f.calls.length, 2);
 });
 
-test('manual selection invalidates pending play resolution and queued ended events', async () => {
+test('manual selection supersedes pending playback without stopping the new preset', async () => {
   const f = await fixture(); f.audio.plans.push('pending'); f.cycle.play(); await f.flush();
   f.cycle.select('vocode');
   f.audio.emit('ended');
-  f.audio.paused = false; // A late native start must be stopped, not adopted.
   f.pending.shift().resolve(); await f.flush();
-  assert.equal(f.audio.paused, true); assert.equal(f.cycle.active, false);
-  assert.equal(f.cycle.selected, 'vocode'); assert.equal(f.calls.length, 1);
+  assert.equal(f.audio.paused, false); assert.equal(f.cycle.active, true);
+  assert.equal(f.cycle.selected, 'vocode'); assert.equal(f.calls.length, 2);
+  f.end(); await f.flush(); assert.equal(f.cycle.selected, 'plain');
 });
 
 test('old play rejection cannot overwrite a new selection or its explicit playback', async () => {
   const f = await fixture(); f.audio.plans.push('pending'); f.cycle.play(); await f.flush();
-  f.cycle.select('clap'); f.cycle.play(); await f.flush();
+  f.cycle.select('clap'); await f.flush();
   f.pending.shift().reject(Error('old failure')); await f.flush();
   assert.equal(f.cycle.selected, 'clap'); assert.equal(f.cycle.active, true);
   assert.equal(f.audio.paused, false); assert.equal(f.message, '');
@@ -132,7 +132,7 @@ test('old play rejection cannot overwrite a new selection or its explicit playba
 
 test('old play success cannot stop a newer explicit Play', async () => {
   const f = await fixture(); f.audio.plans.push('pending'); f.cycle.play(); await f.flush();
-  f.cycle.select('hum'); f.cycle.play(); await f.flush();
+  f.cycle.select('hum'); await f.flush();
   f.pending.shift().resolve(); await f.flush();
   assert.equal(f.cycle.active, true); assert.equal(f.audio.paused, false);
 });
@@ -178,7 +178,7 @@ test('a stale AudioContext rejection cannot cancel a newer explicit selection', 
   let rejectUnlock;
   let first = true;
   const f = await fixture({ unlock: () => first ? (first = false, new Promise((_, reject) => { rejectUnlock = reject; })) : Promise.resolve() });
-  f.cycle.play(); await f.flush(); f.cycle.select('chant'); f.cycle.play(); await f.flush();
+  f.cycle.play(); await f.flush(); f.cycle.select('chant'); await f.flush();
   rejectUnlock(Error('old interruption')); await f.flush();
   assert.equal(f.cycle.active, true); assert.equal(f.audio.paused, false); assert.equal(f.message, '');
 });
@@ -211,4 +211,34 @@ test('a queued native pause cannot stop a newer explicit Play', async () => {
   f.cycle.pause(); f.cycle.play(); await f.flush();
   assert.equal(f.cycle.active, true); assert.equal(f.audio.paused, false);
   f.end(); await f.flush(); assert.equal(f.cycle.selected, 'hum');
+});
+
+
+test('Pause after a selection cancels both old and replacement pending playback', async () => {
+  const f = await fixture(); f.audio.plans.push('pending', 'pending');
+  f.cycle.play(); f.cycle.select('hum'); f.cycle.pause();
+  f.audio.paused = false; // Model a late native start after the explicit pause.
+  for (const request of f.pending.splice(0)) request.resolve();
+  await f.flush();
+  f.audio.ended = true; f.audio.emit('ended');
+  assert.equal(f.audio.paused, true); assert.equal(f.cycle.active, false);
+  assert.equal(f.cycle.selected, 'hum'); assert.equal(f.calls.length, 2);
+});
+
+test('a native pause queued before selection keeps the new preset paused', async () => {
+  const f = await fixture(); f.cycle.play(); await f.flush();
+  f.audio.pause(); // The pause event has not been dispatched yet.
+  f.cycle.select('whisper'); await f.flush();
+  assert.equal(f.cycle.active, false); assert.equal(f.audio.paused, true);
+  assert.equal(f.cycle.selected, 'whisper'); assert.equal(f.calls.length, 1);
+});
+
+test('rapid selections keep only the latest preset and advance from it', async () => {
+  const f = await fixture(); f.audio.plans.push('pending', 'pending', 'pending');
+  f.cycle.play(); f.cycle.select('hum'); f.cycle.select('clap');
+  const [first, second, current] = f.pending.splice(0);
+  second.reject(Error('superseded')); current.resolve(); first.resolve();
+  await f.flush();
+  assert.equal(f.cycle.selected, 'clap'); assert.equal(f.cycle.active, true); assert.equal(f.message, '');
+  f.end(); await f.flush(); assert.equal(f.cycle.selected, 'vocode');
 });

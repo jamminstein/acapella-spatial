@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOME, boundPosition, describePosition } from './spatial-position.js';
+import { HOME, LISTENER_Z, boundPosition, describePosition } from './spatial-position.js';
 import { spatialAudio } from './spatial-audio.js';
 
 const root = document.querySelector('.sound-playground');
@@ -15,15 +15,16 @@ const reset = root.querySelector('[data-wave-reset]');
 const mediaRoot = root.dataset.mediaRoot;
 const positionOutput = root.querySelector('[data-wave-position]');
 const descriptions = {
-  plain: 'just a little hum', hum: 'an octave down, in a cathedral', chant: 'telephone voice + long echoes',
+  plain: 'no effects', hum: 'an octave down, in a cathedral', chant: 'telephone voice + long echoes',
   scream: 'everything broken + bitcrush', whisper: 'a tiny, airy voice',
   clap: 'chopped into little beats', vocode: 'all robot, an octave down'
 };
 let position = { ...HOME };
+let constrainToView = boundPosition;
 const spatial = spatialAudio(audio, () => position);
 let placeObject = () => {};
 function place(next, announce = false) {
-  position = boundPosition(next);
+  position = constrainToView(next);
   if (announce) positionOutput.textContent = describePosition(position);
   spatial.move(); placeObject();
 }
@@ -47,9 +48,7 @@ function startAudio() {
   if (audio.ended) audio.currentTime = 0;
   // Keep play() in the original click gesture, including Safari source changes.
   try {
-    spatial.unlock().then(available => {
-      root.querySelector('.waveform-headphones').hidden = !available;
-    }).catch(() => {
+    spatial.unlock().catch(() => {
       if (current !== requestId) return;
       audio.pause(); status.textContent = 'Tap Listen to reconnect the sound';
     });
@@ -122,45 +121,16 @@ async function createViewer() {
   renderer.toneMappingExposure = .9;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, 1, .01, 30);
-  camera.position.set(0, 2.8, 4.8);
-  camera.lookAt(0, .55, 0);
-  scene.add(new THREE.HemisphereLight(0xfff9ef, 0x8f989a, 1.6));
-  const key = new THREE.DirectionalLight(0xfff2df, 2.0);
+  camera.position.set(0, HOME.y, LISTENER_Z);
+  camera.lookAt(0, HOME.y, 0);
+  scene.add(new THREE.HemisphereLight(0xfffbf4, 0xb0b3ad, 1.8));
+  const key = new THREE.DirectionalLight(0xfffbf4, 2.0);
   key.position.set(-3, 5, 4); scene.add(key);
-  const fill = new THREE.DirectionalLight(0xe6f5ff, .9);
+  const fill = new THREE.DirectionalLight(0xe6f5ff, 1.2);
   fill.position.set(4, 1, -3); scene.add(fill);
 
-  // A fixed point of view: the ribbon moves around the room, never the camera.
-  const floor = new THREE.Mesh(new THREE.CylinderGeometry(1.84, 1.84, .035, 96),
-    [new THREE.MeshStandardMaterial({ color: 0xd8cebc, roughness: .9 }),
-     new THREE.MeshBasicMaterial({ color: 0xeee7dc, toneMapped: false }),
-     new THREE.MeshBasicMaterial({ color: 0xeee7dc, toneMapped: false })]);
-  floor.position.y = -.026; scene.add(floor);
-  for (const radius of [.5, 1, 1.5]) {
-    const ring = new THREE.Mesh(new THREE.RingGeometry(radius, radius + .004, 96),
-      new THREE.MeshBasicMaterial({ color: 0x9b9589, transparent: true, opacity: .16, depthWrite: false }));
-    ring.rotation.x = -Math.PI / 2; ring.position.y = -.003; scene.add(ring);
-  }
-  const gridMaterial = new THREE.LineBasicMaterial({ color: 0xb3aaa0, transparent: true, opacity: .18 });
-  for (const axis of [0, 1]) {
-    const points = axis ? [new THREE.Vector3(0, 0, -1.75), new THREE.Vector3(0, 0, 1.75)] :
-      [new THREE.Vector3(-1.75, 0, 0), new THREE.Vector3(1.75, 0, 0)];
-    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMaterial));
-  }
-  const foot = new THREE.Mesh(new THREE.RingGeometry(.07, .077, 48),
-    new THREE.MeshBasicMaterial({ color: 0xb0714a, transparent: true, opacity: .5, depthWrite: false }));
-  foot.rotation.x = -Math.PI / 2; scene.add(foot);
-  const tetherGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-  const tether = new THREE.Line(tetherGeometry, new THREE.LineDashedMaterial({ color: 0xa79c8c, transparent: true, opacity: .4, dashSize: .025, gapSize: .035 }));
-  scene.add(tether);
-  const shadowCanvas = document.createElement('canvas'); shadowCanvas.width = shadowCanvas.height = 128;
-  const brush = shadowCanvas.getContext('2d');
-  const gradient = brush.createRadialGradient(64, 64, 1, 64, 64, 64);
-  gradient.addColorStop(0, 'rgba(82,65,49,.19)'); gradient.addColorStop(1, 'rgba(82,65,49,0)');
-  brush.fillStyle = gradient; brush.fillRect(0, 0, 128, 128);
-  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1.3, .55), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shadowCanvas), transparent: true, depthWrite: false }));
-  shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
-
+  // The ribbon floats freely; its projected shadow falls on the controls.
+  const modes = root.querySelector('.waveform-modes');
   const object = new THREE.Group(); scene.add(object);
   const pearlMaterial = new THREE.MeshStandardMaterial({ color: 0xfffdf7, roughness: .23 });
   const pearlGeometry = new THREE.SphereGeometry(.0055, 20, 16);
@@ -173,7 +143,8 @@ async function createViewer() {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(asset.positions, 3));
     geometry.setIndex(asset.indices); geometry.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({ color: asset.color, emissive: asset.color, emissiveIntensity: .06,
+    const color = new THREE.Color(asset.color).lerp(new THREE.Color('#e8ded5'), .28);
+    const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: .025,
       roughness: asset.style === 'rounded' ? .3 : .5, flatShading: ['pixelated', 'dotted'].includes(asset.style), side: THREE.DoubleSide });
     const mesh = new THREE.Mesh(geometry, material); mesh.visible = false; object.add(mesh);
     prepared.set(asset.id, { mesh, path: asset.path, color: asset.color });
@@ -205,46 +176,72 @@ async function createViewer() {
   requestFrame = () => { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(tick); };
   placeObject = () => {
     object.position.set(position.x, position.y, position.z);
-    object.rotation.y = Math.atan2(-position.x, 2.1 - position.z);
-    foot.position.set(position.x, .005, position.z);
-    shadow.position.set(position.x, .003, position.z);
-    shadow.scale.setScalar(.7 + position.y * .5);
-    shadow.material.opacity = 1 - position.y * .28;
-    const points = tetherGeometry.attributes.position;
-    points.setXYZ(0, position.x, .012, position.z); points.setXYZ(1, position.x, position.y - .06, position.z);
-    points.needsUpdate = true; tether.computeLineDistances();
+    object.rotation.y = Math.atan2(-position.x, LISTENER_Z - position.z);
+    object.updateMatrixWorld(true);
+    const projected = object.position.clone().project(camera);
+    const left = startPearl.getWorldPosition(new THREE.Vector3()).project(camera);
+    const right = endPearl.getWorldPosition(new THREE.Vector3()).project(camera);
+    const depthScale = LISTENER_Z / (LISTENER_Z - position.z);
+    const width = Math.abs(right.x - left.x) * canvas.clientWidth / 2;
+    modes.style.setProperty('--shadow-x', `${(projected.x + 1) * 50}%`);
+    modes.style.setProperty('--shadow-width', `${Math.max(45, width * .95)}px`);
+    modes.style.setProperty('--shadow-height', `${42 * depthScale}px`);
+    modes.style.setProperty('--shadow-y', `${(depthScale - 1) * 24}px`);
+    modes.style.setProperty('--shadow-blur', `${8 + depthScale * 2 + (position.y - HOME.y) * 5}px`);
+    modes.style.setProperty('--shadow-opacity', String(.11 + depthScale * .04 - (position.y - HOME.y) * .035));
     renderScene();
   };
   changeMesh = mode => {
     for (const [id, value] of prepared) value.mesh.visible = id === mode;
-    const selected = prepared.get(mode); path = selected.path; foot.material.color.set(selected.color);
-    pointAt(0, startPearl.position); pointAt(1, endPearl.position); renderScene();
+    const selected = prepared.get(mode); path = selected.path;
+    pointAt(0, startPearl.position); pointAt(1, endPearl.position); placeObject();
   };
 
-  const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
-  const dragPlane = new THREE.Plane(), hit = new THREE.Vector3();
+  // Fit the permitted horizontal travel to the viewport at the current depth.
+  // A constant world-space limit would trap the ribbon near the middle on desktop.
+  constrainToView = next => {
+    const p = boundPosition(next);
+    const depth = LISTENER_Z - p.z;
+    const tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const halfHeight = depth * tangent;
+    // Include the turn toward the viewer: at the side, the nearer tip grows.
+    const fits = x => {
+      const angle = Math.atan2(-x, depth), c = Math.cos(angle), s = Math.sin(angle);
+      return [-.97, .97].every(dx => [-.17, .17].every(dz =>
+        Math.abs((x + dx*c + dz*s) / ((depth + dx*s - dz*c) * tangent * camera.aspect)) <= .96));
+    };
+    if (!fits(p.x)) {
+      let low = 0, high = Math.abs(p.x);
+      for (let i = 0; i < 10; i++) {
+        const middle = (low + high) / 2;
+        if (fits(middle)) low = middle; else high = middle;
+      }
+      p.x = Math.sign(p.x) * low;
+    }
+    const verticalRoom = Math.max(0, halfHeight - .82);
+    p.y = THREE.MathUtils.clamp(p.y, HOME.y - verticalRoom, HOME.y + verticalRoom);
+    return p;
+  };
   let drag = null;
-  function pointerPoint(event) {
-    const rect = canvas.getBoundingClientRect();
-    pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
-    raycaster.setFromCamera(pointer, camera);
-    return raycaster.ray.intersectPlane(dragPlane, hit);
-  }
   canvas.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0) return;
-    const heightDrag = event.shiftKey;
-    dragPlane.set(heightDrag ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0), heightDrag ? -position.z : -position.y);
-    if (!pointerPoint(event)) return;
-    drag = { id: event.pointerId, start: hit.clone(), position: { ...position }, heightDrag };
+    const projected = object.position.clone().project(camera);
+    drag = { id: event.pointerId, x: event.clientX, y: event.clientY,
+      screenX: projected.x, position: { ...position }, heightDrag: event.shiftKey };
     canvas.focus({ preventScroll: true });
     canvas.setPointerCapture(event.pointerId); canvas.classList.add('is-grabbing');
     event.preventDefault();
   });
   canvas.addEventListener('pointermove', event => {
-    if (!drag || drag.id !== event.pointerId || !pointerPoint(event)) return;
-    place({ x: drag.position.x + hit.x - drag.start.x,
-      y: drag.heightDrag ? drag.position.y + hit.y - drag.start.y : position.y,
-      z: drag.heightDrag ? position.z : drag.position.z + hit.z - drag.start.z });
+    if (!drag || drag.id !== event.pointerId) return;
+    const rect = canvas.getBoundingClientRect();
+    const dy = (event.clientY - drag.y) / rect.height;
+    const next = boundPosition({ ...drag.position,
+      y: drag.heightDrag ? drag.position.y - dy * 3 : drag.position.y,
+      z: drag.heightDrag ? drag.position.z : drag.position.z + dy * 8 });
+    const halfWidth = (LISTENER_Z - next.z) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+    next.x = (drag.screenX + (event.clientX - drag.x) / rect.width * 2) * halfWidth;
+    place(next);
   });
   function endDrag(event) {
     if (!drag || drag.id !== event.pointerId) return;
@@ -266,11 +263,10 @@ async function createViewer() {
     const width = canvas.parentElement.clientWidth, height = canvas.parentElement.clientHeight;
     if (!width || !height) return;
     camera.aspect = width / height;
-    // Keep the whole stage and permitted placement range visible on a phone.
+    // Keep the full ribbon visible when close, including on a phone.
     camera.fov = width < 600 ? 52 : 42;
-    camera.position.z = 4.8;
-    camera.lookAt(0, .55, 0); camera.updateProjectionMatrix();
-    renderer.setSize(width, height, false); renderScene();
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height, false); place(position);
   }
   canvas.hidden = false; fallback.hidden = true; reset.hidden = false;
   root.querySelector('.waveform-drag-hint').hidden = false;

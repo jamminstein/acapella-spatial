@@ -1,12 +1,13 @@
 export const HOME = Object.freeze({ x: 0, y: .95, z: 0 });
-export const LIMITS = Object.freeze({ x: [-1.2, 1.2], y: [.24, 1.75], z: [-1.25, 1.15] });
+export const LISTENER_Z = 4.8;
+export const LIMITS = Object.freeze({ x: [-12, 12], y: [.24, 1.75], z: [-4, 2.6] });
 export function boundPosition(position) {
   return Object.fromEntries(Object.entries(LIMITS).map(([axis, [min, max]]) =>
     [axis, Math.min(max, Math.max(min, Number.isFinite(position[axis]) ? position[axis] : HOME[axis]))]));
 }
 export function listeningPosition(position) {
   const p = boundPosition(position);
-  return { x: p.x * 2, y: (p.y - HOME.y) * 1.7, z: (p.z - 2.1) * 1.25 };
+  return { x: p.x * .7, y: (p.y - HOME.y) * .7, z: (p.z - LISTENER_Z) * .7 };
 }
 export function describePosition(position) {
   const p = boundPosition(position);

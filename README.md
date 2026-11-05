@@ -121,7 +121,7 @@ Open Graph and large-image social-card metadata use the text-free main illustrat
 
 ## Publication state
 
-The page describes the app as **coming to Apple Vision Pro**. It deliberately includes no download link, App Store badge, release date, price, reviews, or availability claim. Update those only when the app’s actual release state changes.
+Acapella Spatial 1.0 was approved and released on the App Store on 5 November 2026. The page says **available now on Apple Vision Pro** and links to the region-neutral listing https://apps.apple.com/app/acapella-spatial/id6807963888 (Apple redirects each visitor to their own storefront) from the header and footer navigation, the hero, the footer line, and the support and privacy pages; `apple-itunes-app` adds Safari's Smart App Banner where the app can run. It still shows no price, reviews or official App Store badge. The app is not yet sold in the EU (no Digital Services Act trader status declared), so keep availability claims worldwide-neutral.
 
 The original Acapella Air display font is self-hosted at `fonts/AcapellaAir.woff2` and used only for headings. Its copyright/provenance notice is in `fonts/NOTICE.txt`; body and legal text use system fonts.
 

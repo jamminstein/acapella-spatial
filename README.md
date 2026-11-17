@@ -14,7 +14,7 @@ python3 -m http.server 8767 --bind 127.0.0.1
 
 Open <http://127.0.0.1:8767/>. `index.html` is the landing page; `privacy.html` and `support.html` are standalone legal/help pages. `landing.css` is separate from the original `style.css` used by those pages.
 
-The full privacy policy is also retained in the landing page’s `#privacy` section, preserving access through the original root privacy URL. Its policy body and the support page’s body are unchanged; only the surrounding presentation and site navigation differ.
+The full privacy policy is also retained in the landing page’s `#privacy` section, preserving access through the original root privacy URL. Keep the full policy body identical in both locations when updating it.
 
 ## Media
 
@@ -126,3 +126,12 @@ Acapella Spatial 1.0 was approved and released on the App Store on 5 November 20
 The original Acapella Air display font is self-hosted at `fonts/AcapellaAir.woff2` and used only for headings. Its copyright/provenance notice is in `fonts/NOTICE.txt`; body and legal text use system fonts.
 
 The header/footer wordmark uses `media/images/acapella-air-coral-800.png`, an 800 × 215 transparent delivery copy of the original 1600 × 430 dimensional coral render. It uses the same custom Acapella Air letterforms as the headings. The original remains in the private marketing workspace.
+
+## Privacy and support copy (1.1)
+
+Updated 17 November 2026 with Acapella 1.1: the policy and the support page
+describe user-chosen audio export (stereo mix or separate WAV tracks), the
+`.acapella` scene backup and add-only import, and how to clear effects, keep a
+backup and share a sound. Exports leave the headset only through a system
+destination the user picks; that destination may sync the copy. Keep the policy
+body identical in `privacy.html` and the landing page’s `#privacy` section.
